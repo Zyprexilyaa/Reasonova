@@ -7,7 +7,7 @@ import { AnalyzeAnswerRequest, AnalyzeAnswerResponse } from './types';
 import { analyzeStudentAnswer, generateMockAnalysis } from './analyzeAnswer';
 import { transcribeAudioFile } from './transcribeAudio';
 import { TranscriptionResponse } from './types';
-import { saveProposition, getPropositions, getUserAnswerHistory, saveExamQuestion, getExamQuestions, deleteExamQuestions } from './database';
+import { saveProposition, getPropositions, getUserAnswerHistory, saveExamQuestion, getExamQuestions, deleteExamQuestions, backendInitInfo, db } from './database';
 import { joinClassroomByKey } from './database';
 
 const app = express();
@@ -307,6 +307,28 @@ app.get('/health', (req: Request, res: Response) => {
 // Export the Express app for functions-framework
 export default app;
 export { app };
+
+/**
+ * Endpoint: GET /backendInfo
+ * Returns backend initialization diagnostics and verifies Firestore access
+ */
+app.get('/backendInfo', async (_req: Request, res: Response) => {
+  try {
+    const info: any = { ...backendInitInfo };
+
+    // Perform a lightweight Firestore read to validate permissions
+    try {
+      const snapshot = await db.collection('classrooms').limit(1).get();
+      info.sampleRead = { ok: true, docs: snapshot.size };
+    } catch (err) {
+      info.sampleRead = { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+
+    res.status(200).json(info);
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Unknown error' });
+  }
+});
 
 // Start server if running directly
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
