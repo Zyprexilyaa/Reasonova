@@ -15,6 +15,7 @@ const app = express();
 // Middleware
 // Increase JSON payload limit to handle base64-encoded audio
 app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Enable CORS
 app.use((req: Request, res: Response, next) => {
@@ -226,21 +227,37 @@ app.get('/propositions', async (req: Request, res: Response) => {
  */
 app.post('/joinClassroom', async (req: Request, res: Response) => {
   try {
-    const { studentId, classKey } = req.body;
-    console.log('🏫 joinClassroom endpoint called:', { studentId, classKey });
-    
-    if (!studentId || !classKey) {
+    const { studentId, classKey } = req.body || {};
+    console.log('🏫 joinClassroom endpoint called:', {
+      studentId,
+      classKey,
+      contentType: req.headers['content-type'],
+    });
+
+    if (!req.body || typeof req.body !== 'object') {
+      console.warn('⚠️ Invalid request body for joinClassroom:', req.body);
+      return res.status(400).json({ error: 'Invalid request body' });
+    }
+
+    const normalizedStudentId = typeof studentId === 'string' ? studentId.trim() : '';
+    const normalizedClassKey = typeof classKey === 'string' ? classKey.trim().toUpperCase() : '';
+
+    if (!normalizedStudentId || !normalizedClassKey) {
       return res.status(400).json({ error: 'Missing studentId or classKey in request body' });
     }
 
-    const classroom = await joinClassroomByKey(studentId, classKey.toUpperCase());
+    const classroom = await joinClassroomByKey(normalizedStudentId, normalizedClassKey);
     console.log('✅ Student joined classroom:', classroom.id);
     res.status(200).json({ classroom });
   } catch (error) {
     console.error('❌ Error in joinClassroom endpoint:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const stack = error instanceof Error ? error.stack : 'No stack';
-    console.error('Error stack:', stack);
+
+    if (errorMessage === 'Classroom not found') {
+      return res.status(404).json({ error: errorMessage, stack });
+    }
+
     res.status(500).json({ error: errorMessage, stack });
   }
 });

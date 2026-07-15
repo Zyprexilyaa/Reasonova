@@ -48,7 +48,7 @@ if (admin.apps.length === 0) {
     }
   } catch (error) {
     console.error('❌ Firebase initialization failed:', error);
-    // Do not exit the process on render - let the server return errors, but log clearly
+    throw error;
   }
 } else {
   console.log('♻️  Firebase already initialized');
@@ -294,8 +294,13 @@ export async function deleteExamQuestions(): Promise<number> {
  * Join a classroom by classKey (server-side)
  */
 export async function joinClassroomByKey(studentId: string, classKey: string): Promise<any> {
+  if (!studentId?.trim() || !classKey?.trim()) {
+    throw new Error('Missing studentId or classKey');
+  }
+
+  const normalizedKey = classKey.trim().toUpperCase();
   try {
-    const q = await db.collection('classrooms').where('classKey', '==', classKey).get();
+    const q = await db.collection('classrooms').where('classKey', '==', normalizedKey).get();
     if (q.empty) {
       throw new Error('Classroom not found');
     }
@@ -313,7 +318,13 @@ export async function joinClassroomByKey(studentId: string, classKey: string): P
     await classroomDoc.ref.update({ students: admin.firestore.FieldValue.arrayUnion(studentId) });
 
     // Optionally create /members subdoc
-    await classroomDoc.ref.collection('members').doc(studentId).set({ joinedAt: admin.firestore.FieldValue.serverTimestamp(), studentId }, { merge: true });
+    await classroomDoc.ref.collection('members').doc(studentId).set(
+      {
+        joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+        studentId,
+      },
+      { merge: true }
+    );
 
     const updated = await classroomDoc.ref.get();
     return { id: updated.id, ...updated.data() };

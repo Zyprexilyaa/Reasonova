@@ -15,9 +15,5 @@
   },
   "firestore": {
     "rules": "firestore.rules"
-  },
-  "functions": {
-    "source": "backend/functions",
-    "runtime": "nodejs20"
   }
 }

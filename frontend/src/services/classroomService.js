@@ -79,8 +79,12 @@ export async function joinClassroom(studentId, classKey) {
         };
     }
     catch (error) {
-        console.error('Error joining classroom:', error);
-        throw error;
+        const serverMessage = axios.isAxiosError(error)
+            ? error.response?.data?.error
+            : undefined;
+        const errorMessage = serverMessage || (error instanceof Error ? error.message : 'Failed to join classroom');
+        console.error('Error joining classroom:', errorMessage, error);
+        throw new Error(errorMessage);
     }
 }
 /**
