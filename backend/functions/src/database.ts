@@ -2,9 +2,13 @@ import * as admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
 const projectId = process.env.GCP_PROJECT_ID;
+const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
+let effectiveProjectId: string | undefined = projectId;
+let backendAuthSource = 'unknown';
 
 console.log('🔧 Initializing Firebase Admin...');
 console.log(`📦 GCP_PROJECT_ID: ${projectId || 'not provided'}`);
+console.log(`🔐 FIREBASE_SERVICE_ACCOUNT: ${serviceAccountEnv ? 'present' : 'missing'}`);
 
 if (process.env.FIRESTORE_EMULATOR_HOST) {
   console.log(`📡 Using Firestore emulator at ${process.env.FIRESTORE_EMULATOR_HOST}`);
@@ -38,9 +42,12 @@ if (admin.apps.length === 0) {
         }
 
         admin.initializeApp(initConfig);
+        backendAuthSource = 'service-account';
+        effectiveProjectId = initConfig.projectId;
         console.log('✅ Firebase initialized with service account from env', {
           envProjectId: projectId || null,
           serviceAccountProjectId: serviceAccountProjectId || null,
+          effectiveProjectId: initConfig.projectId || null,
         });
       } catch (err) {
         console.error('❌ Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', err);
@@ -58,8 +65,11 @@ if (admin.apps.length === 0) {
         }
 
         admin.initializeApp(initConfig);
+        backendAuthSource = 'application-default';
+        effectiveProjectId = initConfig.projectId;
         console.log('✅ Firebase initialized with application default credentials', {
           projectId: projectId || null,
+          effectiveProjectId: initConfig.projectId || null,
         });
       } catch (err) {
         console.error('❌ Firebase initialization failed - no credentials available:', err);
@@ -77,6 +87,13 @@ if (admin.apps.length === 0) {
 
 // Get Firestore instance
 export const db = admin.firestore();
+
+export const backendInitInfo = {
+  effectiveProjectId,
+  backendAuthSource,
+  hasServiceAccount: Boolean(serviceAccountEnv),
+  envProjectId: projectId || null,
+};
 
 // Log emulator status
 if (process.env.FIRESTORE_EMULATOR_HOST) {
