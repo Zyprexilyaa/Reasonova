@@ -14,7 +14,8 @@
     "build:buildfunctions": "cd backend/functions && npm run build",
     "generate-pdf-slices": "node scripts/generatePdfQuestionSlices.js",
     "deploy": "firebase deploy --only hosting,firestore:rules",
-    "deploy:hosting": "firebase deploy --only hosting,firestore:rules"
+    "deploy:hosting": "firebase deploy --only hosting,firestore:rules",
+    "autodeploy": "node scripts/autoDeploy.js"
   },
   "dependencies": {
     "firebase": "^12.10.0"

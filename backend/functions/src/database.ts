@@ -1,10 +1,10 @@
 import * as admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
-const projectId = process.env.GCP_PROJECT_ID || 'demo-reasonova';
+const projectId = process.env.GCP_PROJECT_ID;
 
 console.log('🔧 Initializing Firebase Admin...');
-console.log(`📦 Project ID: ${projectId}`);
+console.log(`📦 GCP_PROJECT_ID: ${projectId || 'not provided'}`);
 
 if (process.env.FIRESTORE_EMULATOR_HOST) {
   console.log(`📡 Using Firestore emulator at ${process.env.FIRESTORE_EMULATOR_HOST}`);
@@ -26,11 +26,22 @@ if (admin.apps.length === 0) {
       // Service account provided as environment variable (recommended for Render)
       try {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string);
-        admin.initializeApp({
+        const serviceAccountProjectId = (serviceAccount as { project_id?: string }).project_id;
+        const initConfig: admin.AppOptions = {
           credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-          projectId,
+        };
+
+        if (projectId) {
+          initConfig.projectId = projectId;
+        } else if (serviceAccountProjectId) {
+          initConfig.projectId = serviceAccountProjectId;
+        }
+
+        admin.initializeApp(initConfig);
+        console.log('✅ Firebase initialized with service account from env', {
+          envProjectId: projectId || null,
+          serviceAccountProjectId: serviceAccountProjectId || null,
         });
-        console.log('✅ Firebase initialized with service account from env');
       } catch (err) {
         console.error('❌ Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', err);
         throw err;
@@ -38,8 +49,18 @@ if (admin.apps.length === 0) {
     } else {
       // Fall back to Application Default Credentials if available
       try {
-        admin.initializeApp({ credential: admin.credential.applicationDefault(), projectId });
-        console.log('✅ Firebase initialized with application default credentials');
+        const initConfig: admin.AppOptions = {
+          credential: admin.credential.applicationDefault(),
+        };
+
+        if (projectId) {
+          initConfig.projectId = projectId;
+        }
+
+        admin.initializeApp(initConfig);
+        console.log('✅ Firebase initialized with application default credentials', {
+          projectId: projectId || null,
+        });
       } catch (err) {
         console.error('❌ Firebase initialization failed - no credentials available:', err);
         console.error('Please set FIREBASE_SERVICE_ACCOUNT (stringified JSON) or GOOGLE_APPLICATION_CREDENTIALS.');
