@@ -398,6 +398,8 @@ firebase init
 npm run deploy
 ```
 
+<!-- auto-deploy trigger: updated at 2026-07-15 -->
+
 **Deploy Only Functions:**
 ```bash
 firebase deploy --only functions
