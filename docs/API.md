@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the API endpoints for the PISA Insight Backend.
+This document describes the API endpoints for the Reasonova Backend.
 
 ## Base URL
 
@@ -142,7 +142,7 @@ Checks if the API is running and accessible.
 ```json
 {
   "status": "ok",
-  "message": "PISA Insight Backend is running"
+  "message": "Reasonova Backend is running"
 }
 ```
 

@@ -10,6 +10,7 @@ export const PracticePage = () => {
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState('all');
+    const [selectedSource, setSelectedSource] = useState('all');
     const { user } = useAuth();
     // Use real user ID if available so teacher dashboards can track submissions
     const studentId = user?.uid || `student-${Math.random().toString(36).slice(2, 10)}`;
@@ -22,9 +23,15 @@ export const PracticePage = () => {
         };
         load();
     }, []);
-    const filteredQuestions = selectedCategory === 'all'
-        ? questions
-        : questions.filter((q) => q.category === selectedCategory);
+    const availableSources = Array.from(new Set(questions
+        .filter((q) => q.pdfFileName)
+        .map((q) => q.pdfFileName || '')
+        .filter(Boolean)));
+    const filteredQuestions = questions.filter((q) => {
+        const categoryMatches = selectedCategory === 'all' || q.category === selectedCategory;
+        const sourceMatches = selectedSource === 'all' || q.pdfFileName === selectedSource;
+        return categoryMatches && sourceMatches;
+    });
     const pickRandom = async () => {
         setLoading(true);
         const items = filteredQuestions.length > 0 ? filteredQuestions : questions;
@@ -32,7 +39,7 @@ export const PracticePage = () => {
         setSelected(items[randomIndex] || null);
         setLoading(false);
     };
-    return (_jsx("div", { className: "auth-page", children: _jsx("div", { className: "page-container", children: _jsxs("div", { className: "page-card", children: [_jsx("h2", { className: "auth-subtitle", children: "Practice Exam Questions" }), _jsxs("div", { className: "teacher-actions", children: [_jsx("button", { onClick: pickRandom, className: "btn btn-primary", style: { marginRight: 8 }, children: "Pick Random" }), _jsx(Link, { to: "/", className: "btn btn-outline", children: "Back Home" })] }), loading && _jsx("div", { children: "Loading propositions..." }), !loading && !selected && (_jsxs("div", { children: [_jsx("h3", { children: "Available Exam Questions" }), _jsxs("div", { style: { marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }, children: [_jsxs("label", { style: { marginBottom: 0 }, children: ["Subject / Category:", _jsxs("select", { value: selectedCategory, onChange: (e) => setSelectedCategory(e.target.value), style: { marginLeft: 8, minWidth: 180 }, children: [_jsx("option", { value: "all", children: "All subjects" }), Array.from(new Set(questions.map((q) => q.category))).map((category) => (_jsx("option", { value: category, children: category }, category)))] })] }), _jsxs("span", { style: { color: '#555' }, children: ["Showing ", filteredQuestions.length, " of ", questions.length, " questions"] })] }), _jsx("div", { className: "proposition-list", children: filteredQuestions.map((q, idx) => (_jsxs("div", { className: "proposition-item", children: [_jsxs("h4", { children: [q.questionText.substring(0, 120), q.questionText.length > 120 ? '...' : ''] }), _jsxs("div", { className: "proposition-meta", children: [q.category, " \u2022 ", q.difficulty, q.questionNumber && ` • Q${q.questionNumber}`] }), _jsxs("div", { style: { display: 'flex', justifyContent: 'flex-end', gap: 8 }, children: [_jsx(Link, { to: `/practice/question/${q.id || ''}`, className: "btn btn-outline", children: "Open" }), _jsx("button", { className: "btn btn-primary", onClick: () => setSelected(q), children: "Practice" })] })] }, idx))) })] })), selected && (_jsxs("div", { children: [_jsx("div", { className: "teacher-actions", style: { marginBottom: 16 }, children: _jsx("button", { onClick: () => setSelected(null), className: "btn btn-outline", children: "Back to list" }) }), _jsx(QuestionPage, { question: {
+    return (_jsx("div", { className: "auth-page", children: _jsx("div", { className: "page-container", children: _jsxs("div", { className: "page-card", children: [_jsx("h2", { className: "auth-subtitle", children: "Practice Exam Questions" }), _jsxs("div", { className: "teacher-actions", children: [_jsx("button", { onClick: pickRandom, className: "btn btn-primary", style: { marginRight: 8 }, children: "Pick Random" }), _jsx(Link, { to: "/practice/answers", className: "btn btn-secondary", style: { marginRight: 8 }, children: "Answer Guide" }), _jsx(Link, { to: "/", className: "btn btn-outline", children: "Back Home" })] }), loading && _jsx("div", { children: "Loading propositions..." }), !loading && !selected && (_jsxs("div", { children: [_jsx("h3", { children: "Available Exam Questions" }), _jsxs("div", { style: { marginBottom: 16, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', alignItems: 'center' }, children: [_jsxs("label", { style: { marginBottom: 0 }, children: ["Subject / Category:", _jsxs("select", { value: selectedCategory, onChange: (e) => setSelectedCategory(e.target.value), style: { marginLeft: 8, minWidth: 180 }, children: [_jsx("option", { value: "all", children: "All subjects" }), Array.from(new Set(questions.map((q) => q.category))).map((category) => (_jsx("option", { value: category, children: category }, category)))] })] }), _jsxs("label", { style: { marginBottom: 0 }, children: ["PISA Test Source:", _jsxs("select", { value: selectedSource, onChange: (e) => setSelectedSource(e.target.value), style: { marginLeft: 8, minWidth: 180 }, children: [_jsx("option", { value: "all", children: "All tests" }), availableSources.map((source) => (_jsx("option", { value: source, children: source }, source)))] })] }), _jsxs("span", { style: { color: '#555' }, children: ["Showing ", filteredQuestions.length, " of ", questions.length, " questions"] })] }), _jsx("div", { className: "proposition-list", children: filteredQuestions.map((q, idx) => (_jsxs("div", { className: "proposition-item", children: [_jsxs("h4", { children: [q.questionText.substring(0, 120), q.questionText.length > 120 ? '...' : ''] }), _jsxs("div", { className: "proposition-meta", children: [q.category, " \u2022 ", q.difficulty, q.questionNumber && ` • Q${q.questionNumber}`, q.pdfFileName && ` • ${q.pdfFileName}`, q.questionType && ` • ${q.questionType}`] }), _jsxs("div", { style: { display: 'flex', justifyContent: 'flex-end', gap: 8 }, children: [_jsx(Link, { to: `/practice/question/${q.id || ''}`, className: "btn btn-outline", children: "Open" }), _jsx("button", { className: "btn btn-primary", onClick: () => setSelected(q), children: "Practice" })] })] }, idx))) })] })), selected && (_jsxs("div", { children: [_jsx("div", { className: "teacher-actions", style: { marginBottom: 16 }, children: _jsx("button", { onClick: () => setSelected(null), className: "btn btn-outline", children: "Back to list" }) }), _jsx(QuestionPage, { question: {
                                     id: selected.id || 'exam-q-' + Math.random().toString(36).slice(2, 10),
                                     questionText: selected.questionText,
                                     difficulty: selected.difficulty,

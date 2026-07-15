@@ -18,8 +18,12 @@ export interface PropositionData {
   scoringRubric: ScoringRubric;
   language?: 'th' | 'en';
   questionImage?: string;
+  sourceType?: 'text' | 'pdf';
   pdfUrl?: string;
   pdfFileName?: string;
+  pdfSliceUrl?: string;
+  sourcePage?: number;
+  sourcePageRange?: string;
 }
 
 function mapExamQuestionToProposition(question: ExamQuestionData): PropositionData {
@@ -34,6 +38,9 @@ function mapExamQuestionToProposition(question: ExamQuestionData): PropositionDa
     questionImage: question.questionImage,
     pdfUrl: question.pdfUrl,
     pdfFileName: question.pdfFileName,
+    pdfSliceUrl: question.pdfSliceUrl,
+    sourcePage: question.sourcePage,
+    sourcePageRange: question.sourcePageRange,
   };
 }
 

@@ -1,5 +1,5 @@
 {
-  "name": "pisa-project",
+  "name": "reasonova",
   "version": "1.0.0",
   "scripts": {
     "start": "npm run dev",
@@ -12,9 +12,13 @@
     "build:frontend": "cd frontend && npm run build",
     "build:backend": "cd backend/functions && npm run build",
     "build:buildfunctions": "cd backend/functions && npm run build",
+    "generate-pdf-slices": "node scripts/generatePdfQuestionSlices.js",
     "deploy": "firebase deploy"
   },
   "dependencies": {
     "firebase": "^12.10.0"
+  },
+  "devDependencies": {
+    "pdf-lib": "^1.17.1"
   }
 }

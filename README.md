@@ -23,7 +23,7 @@ A comprehensive web application designed to evaluate Thai students' analytical t
 
 ## 🎯 Project Overview
 
-PISA Insight is an intelligent assessment platform that evaluates students' analytical thinking capabilities through voice-based answers to standardized questions. The application uses cutting-edge AI technology to provide real-time feedback, thinking level classification, and personalized learning suggestions.
+Reasonova is an intelligent assessment platform that evaluates students' analytical thinking capabilities through voice-based answers to standardized questions. The application uses cutting-edge AI technology to provide real-time feedback, thinking level classification, and personalized learning suggestions.
 
 **Key Objectives:**
 - Assess students' PISA-aligned thinking skills (Levels 1-4)

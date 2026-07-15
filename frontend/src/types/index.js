@@ -1,2 +1,2 @@
-// Types for the PISA Insight Application
+// Types for the Reasonova Application
 export {};

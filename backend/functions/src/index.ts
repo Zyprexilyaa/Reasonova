@@ -283,7 +283,7 @@ app.get('/userAnswerHistory', async (req: Request, res: Response) => {
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
-    message: 'PISA Insight Backend is running',
+    message: 'Reasonova Backend is running',
   });
 });
 

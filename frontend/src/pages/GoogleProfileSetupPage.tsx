@@ -52,7 +52,7 @@ export const GoogleProfileSetupPage: React.FC = () => {
       <div className="auth-container">
         <div className="auth-card">
           <div className="auth-logo">
-            <img src="/assets/pisa-logo.png" alt="PISA Insight Logo" className="logo-img" />
+            <img src="/assets/reasonova-logo.png" alt="Reasonova Logo" className="logo-img" />
           </div>
           <h2 className="auth-subtitle">Complete Your Profile</h2>
 

@@ -1,4 +1,4 @@
-# PISA Insight — Project Documentation
+# Reasonova — Project Documentation
 
 **Last updated:** 2026-03-11
 
@@ -6,7 +6,7 @@
 
 **Project summary**
 
-- Name: PISA Insight (PISA app)
+- Name: Reasonova
 - Purpose: Web application for creating and practicing critical thinking test-style questions (propositions), managing classrooms, and tracking student progress. Teachers can create classrooms and propositions; students can join classrooms, practice propositions and submit answers.
 
 ---

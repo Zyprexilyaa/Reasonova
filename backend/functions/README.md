@@ -1,6 +1,6 @@
 # Firebase Functions Backend
 
-This directory contains the Firebase Functions that power the backend of the PISA Insight Analyzer.
+This directory contains the Firebase Functions that power the backend of Reasonova.
 
 ## File Structure
 

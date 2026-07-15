@@ -11,6 +11,7 @@ export const PracticePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ExamQuestionData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSource, setSelectedSource] = useState<string>('all');
   const { user } = useAuth();
 
   // Use real user ID if available so teacher dashboards can track submissions
@@ -26,9 +27,20 @@ export const PracticePage: React.FC = () => {
     load();
   }, []);
 
-  const filteredQuestions = selectedCategory === 'all'
-    ? questions
-    : questions.filter((q) => q.category === selectedCategory);
+  const availableSources = Array.from(
+    new Set(
+      questions
+        .filter((q) => q.pdfFileName)
+        .map((q) => q.pdfFileName || '')
+        .filter(Boolean)
+    )
+  );
+
+  const filteredQuestions = questions.filter((q) => {
+    const categoryMatches = selectedCategory === 'all' || q.category === selectedCategory;
+    const sourceMatches = selectedSource === 'all' || q.pdfFileName === selectedSource;
+    return categoryMatches && sourceMatches;
+  });
 
   const pickRandom = async () => {
     setLoading(true);
@@ -46,6 +58,7 @@ export const PracticePage: React.FC = () => {
 
           <div className="teacher-actions">
             <button onClick={pickRandom} className="btn btn-primary" style={{marginRight:8}}>Pick Random</button>
+            <Link to="/practice/answers" className="btn btn-secondary" style={{marginRight:8}}>Answer Guide</Link>
             <Link to="/" className="btn btn-outline">Back Home</Link>
           </div>
 
@@ -54,7 +67,7 @@ export const PracticePage: React.FC = () => {
           {!loading && !selected && (
             <div>
               <h3>Available Exam Questions</h3>
-              <div style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ marginBottom: 16, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', alignItems: 'center' }}>
                 <label style={{ marginBottom: 0 }}>
                   Subject / Category:
                   <select
@@ -68,6 +81,21 @@ export const PracticePage: React.FC = () => {
                     ))}
                   </select>
                 </label>
+
+                <label style={{ marginBottom: 0 }}>
+                  PISA Test Source:
+                  <select
+                    value={selectedSource}
+                    onChange={(e) => setSelectedSource(e.target.value)}
+                    style={{ marginLeft: 8, minWidth: 180 }}
+                  >
+                    <option value="all">All tests</option>
+                    {availableSources.map((source) => (
+                      <option key={source} value={source}>{source}</option>
+                    ))}
+                  </select>
+                </label>
+
                 <span style={{ color: '#555' }}>
                   Showing {filteredQuestions.length} of {questions.length} questions
                 </span>
@@ -79,6 +107,8 @@ export const PracticePage: React.FC = () => {
                     <div className="proposition-meta">
                       {q.category} • {q.difficulty}
                       {q.questionNumber && ` • Q${q.questionNumber}`}
+                      {q.pdfFileName && ` • ${q.pdfFileName}`}
+                      {q.questionType && ` • ${q.questionType}`}
                     </div>
                     <div style={{display:'flex', justifyContent:'flex-end', gap: 8}}>
                       <Link to={`/practice/question/${q.id || ''}`} className="btn btn-outline">Open</Link>

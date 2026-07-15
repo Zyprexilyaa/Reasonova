@@ -2,7 +2,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { QuestionPage } from './QuestionPage';
-import { getExamQuestionById } from '../services/examQuestionService';
+import { getAnswerMethod, getExamQuestionById } from '../services/examQuestionService';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 export const ExamQuestionDetailPage = () => {
@@ -45,6 +45,7 @@ export const ExamQuestionDetailPage = () => {
     if (error || !question) {
         return (_jsx("div", { className: "auth-page", children: _jsx("div", { className: "page-container", children: _jsxs("div", { className: "page-card", children: [_jsx("h2", { children: error || 'Question not found.' }), _jsx("button", { className: "btn btn-outline", onClick: () => navigate('/practice'), children: "Back to Practice" })] }) }) }));
     }
+    const answerMethod = getAnswerMethod(question);
     const questionProp = {
         id: question.id || `exam-q-${Math.random().toString(36).slice(2, 10)}`,
         questionText: question.questionText,
@@ -56,5 +57,5 @@ export const ExamQuestionDetailPage = () => {
         questionImage: question.questionImage,
         context: question.pdfUrl ? `PDF source: ${question.pdfFileName}` : undefined,
     };
-    return (_jsx("div", { className: "auth-page", children: _jsx("div", { className: "page-container", children: _jsxs("div", { className: "page-card", children: [_jsx("div", { className: "teacher-actions", style: { marginBottom: 16 }, children: _jsx("button", { onClick: () => navigate('/practice'), className: "btn btn-outline", children: "\u2190 Back to Practice" }) }), _jsx(QuestionPage, { question: questionProp, studentId: studentId, proposition: question })] }) }) }));
+    return (_jsx("div", { className: "auth-page", children: _jsx("div", { className: "page-container", children: _jsxs("div", { className: "page-card", children: [_jsx("div", { className: "teacher-actions", style: { marginBottom: 16 }, children: _jsx("button", { onClick: () => navigate('/practice'), className: "btn btn-outline", children: "\u2190 Back to Practice" }) }), _jsxs("div", { className: "question-context", style: { marginBottom: 18 }, children: [_jsx("strong", { children: "Answer method:" }), _jsx("p", { children: answerMethod })] }), _jsx(QuestionPage, { question: questionProp, studentId: studentId, proposition: question })] }) }) }));
 };

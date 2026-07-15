@@ -282,20 +282,18 @@ a, button, input, textarea, select {
 
 /* Question Page */
 .question-page {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  align-items: start;
-}
-
-@media (max-width: 768px) {
-  .question-page {
-    grid-template-columns: 1fr;
-  }
+  display: block;
 }
 
 .question-container {
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.question-content {
+  width: 100%;
+  max-width: 100%;
 }
 
 .question-section,

@@ -16,6 +16,7 @@ import { TeacherLoginPage } from './pages/TeacherLoginPage';
 import { TeacherAddPropositionPage } from './pages/TeacherAddPropositionPage';
 import { TeacherPropositionListPage } from './pages/TeacherPropositionListPage';
 import { PracticePage } from './pages/PracticePage';
+import { AnswerGuidePage } from './pages/AnswerGuidePage';
 import { ExamQuestionDetailPage } from './pages/ExamQuestionDetailPage';
 import { ClassroomContestPage } from './pages/ClassroomContestPage';
 import { ClassroomProblemPage } from './pages/ClassroomProblemPage';
@@ -98,6 +99,11 @@ function App() {
             <Route path="/practice" element={
               <ProtectedRoute allowedRoles={[ 'student' ]}>
                 <PracticePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/practice/answers" element={
+              <ProtectedRoute allowedRoles={[ 'student' ]}>
+                <AnswerGuidePage />
               </ProtectedRoute>
             } />
             <Route path="/practice/question/:questionId" element={

@@ -1,6 +1,6 @@
 # Firestore Database Schema
 
-This document describes the Firestore database structure for the PISA Insight Analyzer.
+This document describes the Firestore database structure for Reasonova.
 
 ## Collections
 

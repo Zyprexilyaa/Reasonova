@@ -27,6 +27,8 @@ export const QuestionPage: React.FC<QuestionPageProps> = ({
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [textAnswer, setTextAnswer] = useState<string>('');
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
+  const [supportText, setSupportText] = useState<string>('');
   const [transcription, setTranscription] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -39,15 +41,61 @@ export const QuestionPage: React.FC<QuestionPageProps> = ({
     setError(null);
   };
 
-  const hasAnswerInput = inputMethod === 'voice'
-    ? Boolean(audioBlob)
-    : Boolean(textAnswer.trim());
+  useEffect(() => {
+    const answerFileUrl = proposition?.answerFileUrl;
+    if (!answerFileUrl) {
+      setSupportText('');
+      return;
+    }
+
+    const loadSupportText = async () => {
+      try {
+        const response = await fetch(answerFileUrl);
+        if (!response.ok) {
+          setSupportText('');
+          return;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('text/html')) {
+          setSupportText('');
+          return;
+        }
+
+        const text = await response.text();
+        const isHtml = /<\s*html.*?>/i.test(text);
+        if (!text || isHtml) {
+          setSupportText('');
+          return;
+        }
+
+        setSupportText(text);
+      } catch {
+        setSupportText('');
+      }
+    };
+
+    loadSupportText();
+  }, [proposition?.answerFileUrl]);
+
+  const hasChoiceOptions = proposition?.questionType === 'choice' && (proposition.options?.length ?? 0) > 0;
+  const hasAnswerInput = hasChoiceOptions
+    ? Boolean(selectedChoice)
+    : inputMethod === 'voice'
+      ? Boolean(audioBlob)
+      : Boolean(textAnswer.trim());
 
   const handleSubmitAnswer = async () => {
     // Get transcription based on input method
     let finalTranscription = '';
 
-    if (inputMethod === 'voice') {
+    if (proposition?.questionType === 'choice') {
+      if (!selectedChoice) {
+        setError('Please select an answer option.');
+        return;
+      }
+      finalTranscription = selectedChoice;
+    } else if (inputMethod === 'voice') {
       if (!audioBlob || !audioUrl) {
         setError(t('pleaseRecordAnswer'));
         return;
@@ -129,21 +177,87 @@ export const QuestionPage: React.FC<QuestionPageProps> = ({
                 className="question-image"
               />
             )}
-            <p className="question-text">{question.questionText}</p>
-            {proposition?.sourceType === 'pdf' && !question.questionImage && (
-              <div className="question-context" style={{ backgroundColor: '#fff4e5', borderColor: '#f59e0b' }}>
-                <strong>Note:</strong>
-                <p>
-                  This PISA question may depend on an image or diagram in the PDF. Please open the source PDF to view the full content and answer accurately.
-                </p>
+            {proposition?.questionType !== 'pdf' && (
+              <p className="question-text">{question.questionText}</p>
+            )}
+
+            {proposition?.questionType === 'choice' ? (
+              proposition.options?.length ? (
+                <div className="question-context" style={{ marginBottom: 16 }}>
+                  <strong>Choose one answer:</strong>
+                  <div className="choice-grid">
+                    {proposition.options.map((option, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setSelectedChoice(option)}
+                        className={`choice-option ${selectedChoice === option ? 'active' : ''}`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="question-context" style={{ marginBottom: 16 }}>
+                  <strong>This question is multiple choice.</strong>
+                  <p style={{ marginTop: 8 }}>
+                    The choice options are not currently available for this question. You can still type your answer below, or choose another question.
+                  </p>
+                </div>
+              )
+            ) : null}
+
+            {((proposition?.sourceType === 'pdf' || proposition?.pdfUrl) && (proposition?.pdfSliceUrl || proposition?.pdfUrl)) ? (
+              <>
+                <div className="question-context" style={{ backgroundColor: '#fff4e5', borderColor: '#f59e0b' }}>
+                  <strong>PDF Question</strong>
+                  <p style={{ marginTop: 8 }}>
+                    The full question is shown in the embedded PDF below. Please read the PDF page carefully and answer based on that content.
+                  </p>
+                </div>
+                <div className="question-context">
+                  <strong>PDF Viewer</strong>
+                  <div style={{ marginTop: 8, minHeight: 760, border: '1px solid #d1d5db' }}>
+                    <object
+                      data={proposition.pdfSliceUrl || proposition.pdfUrl}
+                      type="application/pdf"
+                      width="100%"
+                      height="760"
+                      aria-label="PDF Viewer"
+                    >
+                      <p style={{ padding: 16, color: '#333' }}>
+                        Your browser does not support inline PDFs. You can{' '}
+                        <a href={proposition.pdfSliceUrl || proposition.pdfUrl} target="_blank" rel="noreferrer">
+                          open the PDF in a new tab
+                        </a>.
+                      </p>
+                    </object>
+                  </div>
+                  {proposition.sourcePageRange ? (
+                    <p style={{ marginTop: 8, fontSize: 14, color: '#555' }}>
+                      Showing page{proposition.sourcePageRange.includes('-') ? 's' : ''}: {proposition.sourcePageRange}
+                    </p>
+                  ) : proposition.sourcePage ? (
+                    <p style={{ marginTop: 8, fontSize: 14, color: '#555' }}>
+                      Showing page: {proposition.sourcePage}
+                    </p>
+                  ) : proposition.pdfFileName ? (
+                    <p style={{ marginTop: 8, fontSize: 14, color: '#555' }}>
+                      Source PDF: {proposition.pdfFileName}
+                    </p>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
+
+            {supportText && (
+              <div className="question-context" style={{ marginTop: 16 }}>
+                <strong>Answer guidance</strong>
+                <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', marginTop: 8 }}>{supportText}</pre>
               </div>
             )}
-            {proposition?.sourceType === 'pdf' && proposition?.pdfUrl && (
-              <div className="question-context">
-                <strong>PDF Question Source:</strong>
-                <p><a href={proposition.pdfUrl} target="_blank" rel="noreferrer">{proposition.pdfFileName || 'Open PDF'}</a></p>
-              </div>
-            )}
+
             {question.context && (
               <div className="question-context">
                 <strong>Context:</strong>
@@ -159,43 +273,61 @@ export const QuestionPage: React.FC<QuestionPageProps> = ({
             <h2>{t('recordAnswer')}</h2>
             <p className="instructions">{t('instructions')}</p>
 
-            {/* Input Method Selection */}
-            <div className="input-method-selector">
-              <label>{t('selectInputMethod')}:</label>
-              <div className="method-buttons">
-                <button
-                  className={`method-btn ${inputMethod === 'voice' ? 'active' : ''}`}
-                  onClick={() => setInputMethod('voice')}
-                >
-                  🎤 {t('voiceRecording')}
-                </button>
-                <button
-                  className={`method-btn ${inputMethod === 'text' ? 'active' : ''}`}
-                  onClick={() => setInputMethod('text')}
-                >
-                  ⌨️ {t('typingAnswer')}
-                </button>
+            {proposition?.questionType === 'choice' && hasChoiceOptions ? (
+              <div className="question-context" style={{ marginBottom: '1.5rem' }}>
+                <strong>Select one answer option and submit.</strong>
+                <p style={{ marginTop: 8, color: '#444' }}>
+                  Once you choose an option, press submit to receive analysis and feedback.
+                </p>
               </div>
-            </div>
+            ) : proposition?.questionType === 'choice' && !hasChoiceOptions ? (
+              <div className="question-context" style={{ marginBottom: '1.5rem' }}>
+                <strong>Choice question without options</strong>
+                <p style={{ marginTop: 8, color: '#444' }}>
+                  If this question has answer choices, they are not loaded yet. Please type your best answer, or select another question.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Input Method Selection */}
+                <div className="input-method-selector">
+                  <label>{t('selectInputMethod')}:</label>
+                  <div className="method-buttons">
+                    <button
+                      className={`method-btn ${inputMethod === 'voice' ? 'active' : ''}`}
+                      onClick={() => setInputMethod('voice')}
+                    >
+                      🎤 {t('voiceRecording')}
+                    </button>
+                    <button
+                      className={`method-btn ${inputMethod === 'text' ? 'active' : ''}`}
+                      onClick={() => setInputMethod('text')}
+                    >
+                      ⌨️ {t('typingAnswer')}
+                    </button>
+                  </div>
+                </div>
 
-            {/* Voice Recording */}
-            {inputMethod === 'voice' && (
-              <AudioRecorder
-                onRecordingComplete={handleRecordingComplete}
-                disabled={isSubmitting || isAnalyzing}
-              />
-            )}
+                {/* Voice Recording */}
+                {inputMethod === 'voice' && (
+                  <AudioRecorder
+                    onRecordingComplete={handleRecordingComplete}
+                    disabled={isSubmitting || isAnalyzing}
+                  />
+                )}
 
-            {/* Text Input */}
-            {inputMethod === 'text' && (
-              <textarea
-                className="text-input"
-                value={textAnswer}
-                onChange={(e) => setTextAnswer(e.target.value)}
-                placeholder={t('typeYourAnswer')}
-                disabled={isSubmitting || isAnalyzing}
-                rows={6}
-              />
+                {/* Text Input */}
+                {inputMethod === 'text' && (
+                  <textarea
+                    className="text-input"
+                    value={textAnswer}
+                    onChange={(e) => setTextAnswer(e.target.value)}
+                    placeholder={t('typeYourAnswer')}
+                    disabled={isSubmitting || isAnalyzing}
+                    rows={6}
+                  />
+                )}
+              </>
             )}
 
             {error && <div className="error-alert">{error}</div>}

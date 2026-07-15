@@ -86,8 +86,8 @@ export const MainApp: React.FC = () => {
       <header className="app-header">
         <div className="header-content">
           <div className="app-logo" onClick={() => navigate('/home')} style={{ cursor: 'pointer' }}>
-            <img src="/assets/pisa-logo.png" alt="PISA Insight Logo" className="header-logo-img" />
-            <span className="app-title">PISA Insight</span>
+            <img src="/assets/reasonova-logo.png" alt="Reasonova Logo" className="header-logo-img" />
+            <span className="app-title">Reasonova</span>
           </div>
           <nav className="navigation">
             <button
@@ -208,7 +208,7 @@ export const MainApp: React.FC = () => {
       </main>
 
       <footer className="app-footer">
-        <p>© 2026 PISA Insight Analyzer | AI-Powered Learning</p>
+        <p>© 2026 Reasonova | AI-Powered Learning</p>
       </footer>
     </div>
   );

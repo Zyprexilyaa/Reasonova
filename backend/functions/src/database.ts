@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
-const projectId = process.env.GCP_PROJECT_ID || 'demo-pisa-thinking-skills';
+const projectId = process.env.GCP_PROJECT_ID || 'demo-reasonova';
 
 console.log('🔧 Initializing Firebase Admin...');
 console.log(`📦 Project ID: ${projectId}`);

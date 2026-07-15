@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { QuestionPage } from './QuestionPage';
-import { getExamQuestionById, ExamQuestionData } from '../services/examQuestionService';
+import { getAnswerMethod, getExamQuestionById, ExamQuestionData } from '../services/examQuestionService';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 
@@ -67,6 +67,7 @@ export const ExamQuestionDetailPage: React.FC = () => {
     );
   }
 
+  const answerMethod = getAnswerMethod(question);
   const questionProp = {
     id: question.id || `exam-q-${Math.random().toString(36).slice(2, 10)}`,
     questionText: question.questionText,
@@ -87,6 +88,10 @@ export const ExamQuestionDetailPage: React.FC = () => {
             <button onClick={() => navigate('/practice')} className="btn btn-outline">
               ← Back to Practice
             </button>
+          </div>
+          <div className="question-context" style={{ marginBottom: 18 }}>
+            <strong>Answer method:</strong>
+            <p>{answerMethod}</p>
           </div>
           <QuestionPage question={questionProp} studentId={studentId} proposition={question} />
         </div>

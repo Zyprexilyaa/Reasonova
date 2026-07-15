@@ -22,7 +22,7 @@ export const HomePage: React.FC = () => {
   return (
     <div className="home-page">
       <div className="hero-section">
-        <h1>PISA Insight Analyzer</h1>
+        <h1>Reasonova</h1>
         <p className="subtitle">
           {language === 'th' 
             ? 'ประเมินความสามารถในการคิดวิเคราะห์ของคุณผ่านคำถามสไตล์ PISA' 

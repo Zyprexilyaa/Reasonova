@@ -173,7 +173,7 @@ POST /analyzeAnswer
 ## 🧪 How to Test
 
 ### 1. **Live Website**
-Visit: https://pisa-thinking-skills.web.app
+Visit: https://reasonova.web.app
 - Login with any email
 - Go to "Practice" tab
 - Should auto-load a random Thai question
@@ -238,4 +238,4 @@ Your app now has **enterprise-grade data persistence**:
 - Scalable architecture (free tier sufficient for 50K+ daily users)
 - Ready for teacher dashboards and student progress tracking
 
-Everything is **live at:** https://pisa-thinking-skills.web.app ✅
+Everything is **live at:** https://reasonova.web.app ✅

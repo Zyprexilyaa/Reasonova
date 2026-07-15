@@ -12,6 +12,9 @@ function mapExamQuestionToProposition(question) {
         questionImage: question.questionImage,
         pdfUrl: question.pdfUrl,
         pdfFileName: question.pdfFileName,
+        pdfSliceUrl: question.pdfSliceUrl,
+        sourcePage: question.sourcePage,
+        sourcePageRange: question.sourcePageRange,
     };
 }
 function dedupePropositions(propositions) {

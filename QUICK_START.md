@@ -82,7 +82,7 @@ After starting both frontend and backend:
 
 ### Check Frontend
 ```
-✅ See "🧠 PISA Insight" title
+✅ See "🧠 Reasonova" title
 ✅ No console errors (F12 to open DevTools)
 ✅ Can navigate between pages
 ```

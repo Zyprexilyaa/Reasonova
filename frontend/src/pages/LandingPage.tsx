@@ -11,8 +11,8 @@ export const LandingPage: React.FC = () => {
       <nav className="landing-nav animate-fade-in">
         <div className="nav-container">
           <div className="logo-section">
-            <img src="/assets/pisa-logo.png" alt="PISA Insight" className="landing-logo-img" />
-            <span className="brand-name">PISA Insight</span>
+            <img src="/assets/reasonova-logo.png" alt="Reasonova" className="landing-logo-img" />
+            <span className="brand-name">Reasonova</span>
           </div>
           <div className="nav-links">
             <a href="#features">Features</a>
@@ -33,7 +33,7 @@ export const LandingPage: React.FC = () => {
               The Future of <span className="text-gradient">Analytical Thinking</span>
             </h1>
             <p className="hero-subtitle animate-slide-up delay-1">
-              PISA Insight is your AI-powered companion to master complex reasoning and analytical skills. 
+              Reasonova is your AI-powered companion to master complex reasoning and analytical skills. 
               Understand. Execute. Deliver results.
             </p>
             <div className="hero-actions animate-slide-up delay-2">
@@ -101,7 +101,7 @@ export const LandingPage: React.FC = () => {
       <section className="final-cta">
         <div className="cta-box">
           <h2>Ready to unlock your potential?</h2>
-          <p>Join thousands of students and teachers using PISA Insight today.</p>
+          <p>Join thousands of students and teachers using Reasonova today.</p>
           <button className="btn-white-modern" onClick={() => navigate('/login')}>
             Start Your Journey Now
           </button>
@@ -110,7 +110,7 @@ export const LandingPage: React.FC = () => {
 
       <footer className="landing-footer">
         <div className="footer-container">
-          <p>© 2026 PISA Insight Analyzer. All rights reserved.</p>
+          <p>© 2026 Reasonova. All rights reserved.</p>
           <div className="footer-links">
             <a href="#">Privacy</a>
             <a href="#">Terms</a>

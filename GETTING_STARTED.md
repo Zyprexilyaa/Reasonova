@@ -17,7 +17,7 @@
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click "Create Project"
-3. Enter project name: `pisa-thinking-skills`
+3. Enter project name: `reasonova`
 4. Select region (closest to Thailand: Singapore)
 5. Enable Google Analytics (optional)
 6. Click "Create Project"
@@ -27,16 +27,16 @@
 1. In Firebase Console, click "Project Settings" (⚙️ icon)
 2. Go to "Your Apps" section
 3. Click "Create App" > "Web"
-4. Enter app name: `pisa-app`
+4. Enter app name: `reasonova-app`
 5. Copy the config object - you'll need this for frontend
 
 Your config should look like:
 ```javascript
 {
   apiKey: "AIzaSyD...",
-  authDomain: "pisa-thinking-skills.firebaseapp.com",
-  projectId: "pisa-thinking-skills",
-  storageBucket: "pisa-thinking-skills.appspot.com",
+  authDomain: "reasonova.firebaseapp.com",
+  projectId: "reasonova",
+  storageBucket: "reasonova.appspot.com",
   messagingSenderId: "123456789",
   appId: "1:123456789:web:abc..."
 }
@@ -96,9 +96,9 @@ copy .env.example .env.local
 Edit `frontend/.env.local`:
 ```env
 VITE_FIREBASE_API_KEY=your_actual_api_key
-VITE_FIREBASE_AUTH_DOMAIN=pisa-thinking-skills.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=pisa-thinking-skills
-VITE_FIREBASE_STORAGE_BUCKET=pisa-thinking-skills.appspot.com
+VITE_FIREBASE_AUTH_DOMAIN=reasonova.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=reasonova
+VITE_FIREBASE_STORAGE_BUCKET=reasonova.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FUNCTIONS_URL=http://localhost:5000
@@ -122,7 +122,7 @@ copy .env.example .env.local
 Edit `backend/functions/.env.local`:
 ```env
 GOOGLE_API_KEY=your_actual_google_api_key
-GCP_PROJECT_ID=pisa-thinking-skills
+GCP_PROJECT_ID=reasonova
 GEMINI_MODEL=gemini-pro
 ```
 
@@ -239,8 +239,8 @@ firebase deploy --only hosting        # Deploy frontend only
 ```
 
 Your app will be available at:
-- **Frontend**: https://pisa-thinking-skills.web.app
-- **Backend**: https://your-region-pisa-thinking-skills.cloudfunctions.net
+- **Frontend**: https://reasonova.web.app
+- **Backend**: https://your-region-reasonova.cloudfunctions.net
 
 ### Step 5.3: Update Production Config
 
@@ -248,7 +248,7 @@ Update `firebase.json`:
 ```json
 {
   "projects": {
-    "default": "pisa-thinking-skills"
+    "default": "reasonova"
   }
 }
 ```
