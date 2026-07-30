@@ -22,6 +22,7 @@ export interface ExamQuestionData {
   questionNumber?: string;
   questionImage?: string;
   subject?: string;
+  assessmentType?: string;
   createdBy?: string;
   sourceFile?: string;
 }
@@ -231,6 +232,8 @@ export async function saveExamQuestion(question: ExamQuestionData): Promise<stri
   try {
     const docRef = await addDoc(collection(db, 'examQuestions'), {
       ...question,
+      subject: question.subject || question.category,
+      assessmentType: question.assessmentType || 'general',
       createdAt: serverTimestamp(),
     });
 

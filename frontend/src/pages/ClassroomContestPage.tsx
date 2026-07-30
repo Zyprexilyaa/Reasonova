@@ -2,28 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getClassroomById, Classroom } from '../services/classroomService';
-import { getExamQuestionById, ExamQuestionData } from '../services/examQuestionService';
-import { getPropositions, PropositionData } from '../services/propositionService';
+import { getExamQuestionById, ExamQuestionData, getExamQuestions } from '../services/examQuestionService';
 import './Classroom.css';
-
-function mapExamQuestionToProposition(question: ExamQuestionData): PropositionData {
-  return {
-    id: question.id,
-    questionText: question.questionText,
-    difficulty: question.difficulty,
-    category: question.category,
-    expectedAnswer: question.expectedAnswer,
-    scoringRubric: question.scoringRubric,
-    language: question.language,
-  };
-}
 
 export const ClassroomContestPage: React.FC = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
   const navigate = useNavigate();
   const { userRole } = useAuth();
   const [classroom, setClassroom] = useState<Classroom | null>(null);
-  const [assignedProps, setAssignedProps] = useState<PropositionData[]>([]);
+  const [assignedQuestions, setAssignedQuestions] = useState<ExamQuestionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,22 +30,22 @@ export const ClassroomContestPage: React.FC = () => {
         setClassroom(cls);
 
         if (!cls || !cls.assignedPropositionIds || cls.assignedPropositionIds.length === 0) {
-          setAssignedProps([]);
+          setAssignedQuestions([]);
           return;
         }
 
-        const all = await getPropositions('th');
-        const matched = all.filter(p => p.id && cls.assignedPropositionIds!.includes(p.id));
+        const allQuestions = await getExamQuestions('th');
+        const matched = allQuestions.filter(q => q.id && cls.assignedPropositionIds!.includes(q.id));
 
-        const missingIds = cls.assignedPropositionIds!.filter(id => !matched.some(p => p.id === id));
+        const missingIds = cls.assignedPropositionIds!.filter(id => !matched.some(q => q.id === id));
         for (const id of missingIds) {
           const examQuestion = await getExamQuestionById(id);
           if (examQuestion) {
-            matched.push(mapExamQuestionToProposition(examQuestion));
+            matched.push(examQuestion);
           }
         }
 
-        setAssignedProps(matched);
+        setAssignedQuestions(matched);
       } catch (err) {
         console.error('Error loading classroom contest data', err);
         setError('Failed to load classroom problems');
@@ -104,7 +91,7 @@ export const ClassroomContestPage: React.FC = () => {
           </div>
         )}
 
-        {!loading && !error && assignedProps.length === 0 && (
+        {!loading && !error && assignedQuestions.length === 0 && (
           <div className="classroom-card">
             <p className="no-classrooms">
               Your teacher has not assigned any problems yet. Please check back later.
@@ -112,22 +99,22 @@ export const ClassroomContestPage: React.FC = () => {
           </div>
         )}
 
-        {!loading && !error && assignedProps.length > 0 && (
+        {!loading && !error && assignedQuestions.length > 0 && (
           <div className="classroom-card">
             <h2>📚 Assigned Problems</h2>
             <div className="classroom-list">
-              {assignedProps.map((p) => (
-                <div key={p.id} className="classroom-item">
+              {assignedQuestions.map((q) => (
+                <div key={q.id} className="classroom-item">
                   <div className="classroom-info">
-                    <h3>{p.questionText.substring(0, 120)}{p.questionText.length > 120 ? '...' : ''}</h3>
+                    <h3>{q.questionText.substring(0, 120)}{q.questionText.length > 120 ? '...' : ''}</h3>
                     <p>
-                      <strong>Category:</strong> {p.category} • <strong>Difficulty:</strong> {p.difficulty}
+                      <strong>Category:</strong> {q.category} • <strong>Difficulty:</strong> {q.difficulty}
                     </p>
                   </div>
                   <div className="classroom-actions">
                     <button
                       className="btn btn-secondary"
-                      onClick={() => navigate(`/classroom/${classroomId}/problem/${p.id}`)}
+                      onClick={() => navigate(`/classroom/${classroomId}/problem/${q.id}`)}
                     >
                       Start
                     </button>

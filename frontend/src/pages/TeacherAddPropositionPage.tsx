@@ -11,6 +11,8 @@ export const TeacherAddPropositionPage: React.FC = () => {
   const [questionText, setQuestionText] = useState('');
   const [difficulty, setDifficulty] = useState<'easy'|'medium'|'hard'>('medium');
   const [category, setCategory] = useState<'critical-thinking'|'problem-solving'|'analysis'|'comprehension'>('critical-thinking');
+  const [subject, setSubject] = useState('mathematics');
+  const [assessmentType, setAssessmentType] = useState('pisa');
   const [expectedAnswer, setExpectedAnswer] = useState('');
   const [language, setLanguage] = useState<'th'|'en'>('th');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -46,6 +48,8 @@ export const TeacherAddPropositionPage: React.FC = () => {
         questionText: questionText.trim() || (pdfFileName || 'Question from PDF'),
         difficulty,
         category,
+        subject,
+        assessmentType,
         expectedAnswer,
         language,
         scoringRubric: {
@@ -102,6 +106,26 @@ export const TeacherAddPropositionPage: React.FC = () => {
                 <option value="problem-solving">Problem Solving</option>
                 <option value="analysis">Analysis</option>
                 <option value="comprehension">Comprehension</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Subject</label>
+              <select value={subject} onChange={(e) => setSubject(e.target.value)} className="form-input">
+                <option value="mathematics">Mathematics</option>
+                <option value="science">Science</option>
+                <option value="reading">Reading</option>
+                <option value="collaborative">Collaborative Problem Solving</option>
+                <option value="global">Global Competence</option>
+                <option value="creative">Creative Thinking</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Assessment Type</label>
+              <select value={assessmentType} onChange={(e) => setAssessmentType(e.target.value)} className="form-input">
+                <option value="pisa">PISA</option>
+                <option value="general">General</option>
               </select>
             </div>
 

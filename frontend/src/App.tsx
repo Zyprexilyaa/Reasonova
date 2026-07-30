@@ -21,6 +21,9 @@ import { ExamQuestionDetailPage } from './pages/ExamQuestionDetailPage';
 import { ClassroomContestPage } from './pages/ClassroomContestPage';
 import { ClassroomProblemPage } from './pages/ClassroomProblemPage';
 import { ClassroomAssignPage } from './pages/ClassroomAssignPage';
+import { PisaAssessmentPage } from './pages/PisaAssessmentPage';
+import { PisaMathematicsPage } from './pages/PisaMathematicsPage';
+import { PisaPlaceholderPage } from './pages/PisaPlaceholderPage';
 
 function App() {
   return (
@@ -82,7 +85,7 @@ function App() {
               </ProtectedRoute>
             } />
 
-            {/* Proposition Management */}
+            {/* Question Bank Management */}
             <Route path="/teacher/propositions" element={
               <ProtectedRoute allowedRoles={[ 'teacher' ]}>
                 <TeacherPropositionListPage />
@@ -92,6 +95,23 @@ function App() {
             <Route path="/teacher/propositions/new" element={
               <ProtectedRoute allowedRoles={[ 'teacher' ]}>
                 <TeacherAddPropositionPage />
+              </ProtectedRoute>
+            } />
+
+            {/* PISA assessment routes - available to teachers and students */}
+            <Route path="/pisa" element={
+              <ProtectedRoute>
+                <PisaAssessmentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/pisa/mathematics" element={
+              <ProtectedRoute>
+                <PisaMathematicsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/pisa/:subject" element={
+              <ProtectedRoute>
+                <PisaPlaceholderPage />
               </ProtectedRoute>
             } />
 

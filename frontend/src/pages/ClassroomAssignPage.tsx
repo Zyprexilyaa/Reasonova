@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Classroom, getClassroomById, updateClassroomAssignments } from '../services/classroomService';
-import { getPropositions, PropositionData } from '../services/propositionService';
+import { getExamQuestions, ExamQuestionData } from '../services/examQuestionService';
 import './Classroom.css';
 
 export const ClassroomAssignPage: React.FC = () => {
@@ -11,7 +11,7 @@ export const ClassroomAssignPage: React.FC = () => {
   const { userRole } = useAuth();
 
   const [classroom, setClassroom] = useState<Classroom | null>(null);
-  const [propositions, setPropositions] = useState<PropositionData[]>([]);
+  const [questions, setQuestions] = useState<ExamQuestionData[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,8 +30,8 @@ export const ClassroomAssignPage: React.FC = () => {
         setError(null);
         const cls = await getClassroomById(classroomId);
         setClassroom(cls);
-        const props = await getPropositions('th');
-        setPropositions(props);
+        const allQuestions = await getExamQuestions('th');
+        setQuestions(allQuestions);
         if (cls?.assignedPropositionIds) {
           setSelectedIds(cls.assignedPropositionIds);
         }
@@ -100,23 +100,23 @@ export const ClassroomAssignPage: React.FC = () => {
             <>
               <p>Select which problems you want students in this classroom to solve.</p>
               <div className="classroom-list">
-                {propositions.map((p) => (
+                {questions.map((q) => (
                   <label
-                    key={p.id}
+                    key={q.id}
                     className="classroom-item"
                     style={{ cursor: 'pointer', alignItems: 'flex-start' }}
                   >
                     <div className="classroom-info">
-                      <h3>{p.questionText.substring(0, 120)}{p.questionText.length > 120 ? '...' : ''}</h3>
+                      <h3>{q.questionText.substring(0, 120)}{q.questionText.length > 120 ? '...' : ''}</h3>
                       <p>
-                        <strong>Category:</strong> {p.category} • <strong>Difficulty:</strong> {p.difficulty}
+                        <strong>Category:</strong> {q.category} • <strong>Difficulty:</strong> {q.difficulty}
                       </p>
                     </div>
                     <div className="classroom-actions">
                       <input
                         type="checkbox"
-                        checked={!!(p.id && selectedIds.includes(p.id))}
-                        onChange={() => toggleSelection(p.id)}
+                        checked={!!(q.id && selectedIds.includes(q.id))}
+                        onChange={() => toggleSelection(q.id)}
                       />
                     </div>
                   </label>

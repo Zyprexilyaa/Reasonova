@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { AnalysisResult } from '../types';
-import { PropositionData } from './propositionService';
 
 export const FUNCTIONS_URL = import.meta.env.VITE_FUNCTIONS_URL || 'http://localhost:5000';
 const API_BASE = FUNCTIONS_URL;
@@ -12,7 +11,7 @@ interface AnalyzeAnswerRequest {
   scoringGuideline: string;
   studentId: string;
   audioBase64?: string; // Audio as base64 (optional, can be empty for free version)
-  proposition?: PropositionData; // NEW: Optional proposition with criteria
+  proposition?: unknown; // Optional question context for analysis
   language?: 'th' | 'en'; // NEW: User language
 }
 

@@ -7,7 +7,7 @@ import { AnalyzeAnswerRequest, AnalyzeAnswerResponse } from './types';
 import { analyzeStudentAnswer, generateMockAnalysis } from './analyzeAnswer';
 import { transcribeAudioFile } from './transcribeAudio';
 import { TranscriptionResponse } from './types';
-import { saveProposition, getPropositions, getUserAnswerHistory, saveExamQuestion, getExamQuestions, deleteExamQuestions, backendInitInfo, db } from './database';
+import { getUserAnswerHistory, saveExamQuestion, getExamQuestions, deleteExamQuestions, backendInitInfo, db } from './database';
 import { joinClassroomByKey } from './database';
 
 const app = express();
@@ -92,45 +92,13 @@ app.post('/transcribeAudio', async (req: Request, res: Response) => {
 });
 
 /**
- * Endpoint: POST /saveProposition
- * Saves a new proposition (question) with criteria to the database
+ * Legacy proposition endpoint retained but disabled.
+ * The question system now uses exam questions instead.
  */
-app.post('/saveProposition', async (req: Request, res: Response) => {
-  try {
-    const propositionData = req.body;
-    console.log('📝 saveProposition endpoint called with data:', propositionData);
-
-    // Validate required fields
-    if (
-      !propositionData.questionText ||
-      !propositionData.difficulty ||
-      !propositionData.category ||
-      !propositionData.expectedAnswer ||
-      !propositionData.scoringRubric
-    ) {
-      return res.status(400).json({
-        error: 'Missing required fields: questionText, difficulty, category, expectedAnswer, scoringRubric',
-      });
-    }
-
-    // Save the proposition
-    const docId = await saveProposition(propositionData);
-
-    res.status(201).json({
-      id: docId,
-      message: 'Proposition saved successfully',
-      ...propositionData,
-    });
-  } catch (error) {
-    console.error('❌ Error in saveProposition endpoint:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const stack = error instanceof Error ? error.stack : 'No stack';
-    console.error('Error stack:', stack);
-    res.status(500).json({
-      error: errorMessage,
-      stack: stack
-    });
-  }
+app.post('/saveProposition', async (_req: Request, res: Response) => {
+  res.status(410).json({
+    error: 'The legacy proposition system has been disabled. Use /saveExamQuestion instead.',
+  });
 });
 
 /**
@@ -191,33 +159,13 @@ app.delete('/examQuestions', async (_req: Request, res: Response) => {
 });
 
 /**
- * Endpoint: GET /propositions
- * Retrieves all propositions for a given language
+ * Legacy proposition endpoint retained but disabled.
+ * The question system now uses exam questions instead.
  */
-app.get('/propositions', async (req: Request, res: Response) => {
-  try {
-    const language = (req.query.language as string) || 'th';
-    console.log('📖 getPropositions endpoint called for language:', language);
-
-    // Get propositions
-    const propositions = await getPropositions(language);
-    console.log('✅ Retrieved', propositions.length, 'propositions for language:', language);
-
-    res.status(200).json({
-      language,
-      count: propositions.length,
-      propositions,
-    });
-  } catch (error) {
-    console.error('❌ Error in getPropositions endpoint:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const stack = error instanceof Error ? error.stack : 'No stack';
-    console.error('Error stack:', stack);
-    res.status(500).json({
-      error: errorMessage,
-      stack: stack
-    });
-  }
+app.get('/propositions', async (_req: Request, res: Response) => {
+  res.status(410).json({
+    error: 'The legacy proposition system has been disabled. Use /examQuestions instead.',
+  });
 });
 
 /**

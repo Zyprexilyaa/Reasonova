@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getClassroomById, updateClassroomAssignments } from '../services/classroomService';
-import { getPropositions } from '../services/propositionService';
+import { getExamQuestions } from '../services/examQuestionService';
 import './Classroom.css';
 export const ClassroomAssignPage = () => {
     const { classroomId } = useParams();
     const navigate = useNavigate();
     const { userRole } = useAuth();
     const [classroom, setClassroom] = useState(null);
-    const [propositions, setPropositions] = useState([]);
+    const [questions, setQuestions] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -28,8 +28,8 @@ export const ClassroomAssignPage = () => {
                 setError(null);
                 const cls = await getClassroomById(classroomId);
                 setClassroom(cls);
-                const props = await getPropositions('th');
-                setPropositions(props);
+                const allQuestions = await getExamQuestions('th');
+                setQuestions(allQuestions);
                 if (cls?.assignedPropositionIds) {
                     setSelectedIds(cls.assignedPropositionIds);
                 }
@@ -72,5 +72,5 @@ export const ClassroomAssignPage = () => {
     };
     return (_jsx("div", { className: "classroom-page", children: _jsxs("div", { className: "classroom-container", children: [_jsxs("div", { className: "classroom-header", children: [_jsx("h1", { children: "\uD83D\uDCDA Assign Problems" }), _jsx("p", { children: classroom
                                 ? `Classroom: ${classroom.className}`
-                                : 'Loading classroom information...' })] }), _jsxs("div", { className: "classroom-card", children: [loading && _jsx("div", { className: "loading", children: "Loading propositions..." }), !loading && error && _jsx("div", { className: "error-alert", children: error }), !loading && success && _jsx("div", { className: "success-alert", children: success }), !loading && !error && (_jsxs(_Fragment, { children: [_jsx("p", { children: "Select which problems you want students in this classroom to solve." }), _jsx("div", { className: "classroom-list", children: propositions.map((p) => (_jsxs("label", { className: "classroom-item", style: { cursor: 'pointer', alignItems: 'flex-start' }, children: [_jsxs("div", { className: "classroom-info", children: [_jsxs("h3", { children: [p.questionText.substring(0, 120), p.questionText.length > 120 ? '...' : ''] }), _jsxs("p", { children: [_jsx("strong", { children: "Category:" }), " ", p.category, " \u2022 ", _jsx("strong", { children: "Difficulty:" }), " ", p.difficulty] })] }), _jsx("div", { className: "classroom-actions", children: _jsx("input", { type: "checkbox", checked: !!(p.id && selectedIds.includes(p.id)), onChange: () => toggleSelection(p.id) }) })] }, p.id))) }), _jsxs("div", { className: "classroom-footer", children: [_jsx("button", { onClick: handleSave, className: "btn btn-primary", disabled: saving, children: saving ? 'Saving...' : 'Save Assignments' }), _jsx("button", { onClick: () => navigate('/create-classroom'), className: "btn btn-outline", style: { marginLeft: '0.75rem' }, children: "\u2190 Back to classrooms" })] })] }))] })] }) }));
+                                : 'Loading classroom information...' })] }), _jsxs("div", { className: "classroom-card", children: [loading && _jsx("div", { className: "loading", children: "Loading propositions..." }), !loading && error && _jsx("div", { className: "error-alert", children: error }), !loading && success && _jsx("div", { className: "success-alert", children: success }), !loading && !error && (_jsxs(_Fragment, { children: [_jsx("p", { children: "Select which problems you want students in this classroom to solve." }), _jsx("div", { className: "classroom-list", children: questions.map((q) => (_jsxs("label", { className: "classroom-item", style: { cursor: 'pointer', alignItems: 'flex-start' }, children: [_jsxs("div", { className: "classroom-info", children: [_jsxs("h3", { children: [q.questionText.substring(0, 120), q.questionText.length > 120 ? '...' : ''] }), _jsxs("p", { children: [_jsx("strong", { children: "Category:" }), " ", q.category, " \u2022 ", _jsx("strong", { children: "Difficulty:" }), " ", q.difficulty] })] }), _jsx("div", { className: "classroom-actions", children: _jsx("input", { type: "checkbox", checked: !!(q.id && selectedIds.includes(q.id)), onChange: () => toggleSelection(q.id) }) })] }, q.id))) }), _jsxs("div", { className: "classroom-footer", children: [_jsx("button", { onClick: handleSave, className: "btn btn-primary", disabled: saving, children: saving ? 'Saving...' : 'Save Assignments' }), _jsx("button", { onClick: () => navigate('/create-classroom'), className: "btn btn-outline", style: { marginLeft: '0.75rem' }, children: "\u2190 Back to classrooms" })] })] }))] })] }) }));
 };

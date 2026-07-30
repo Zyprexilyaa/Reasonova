@@ -220,26 +220,10 @@ export async function saveAnswerWithCriteria(
 }
 
 /**
- * Save proposition (question) with criteria to Firestore
+ * Legacy proposition helper retained but disabled.
  */
-export async function saveProposition(propositionData: any): Promise<string> {
-  try {
-    const docRef = await db.collection('propositions').add({
-      questionText: propositionData.questionText,
-      difficulty: propositionData.difficulty,
-      category: propositionData.category,
-      expectedAnswer: propositionData.expectedAnswer,
-      scoringRubric: propositionData.scoringRubric,
-      language: propositionData.language || 'th',
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    
-    console.log(`✅ Proposition saved: ${docRef.id}`);
-    return docRef.id;
-  } catch (error) {
-    console.error('Error saving proposition:', error);
-    throw error;
-  }
+export async function saveProposition(_propositionData: any): Promise<string> {
+  throw new Error('The legacy proposition system is disabled. Use saveExamQuestion instead.');
 }
 
 /**
@@ -271,22 +255,10 @@ export async function saveExamQuestion(questionData: any): Promise<string> {
 }
 
 /**
- * Get all propositions for a language
+ * Legacy proposition helper retained but disabled.
  */
-export async function getPropositions(language: string = 'th'): Promise<any[]> {
-  try {
-    const snapshot = await db.collection('propositions')
-      .where('language', '==', language)
-      .get();
-    
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-  } catch (error) {
-    console.error('Error getting propositions:', error);
-    throw error;
-  }
+export async function getPropositions(_language: string = 'th'): Promise<any[]> {
+  throw new Error('The legacy proposition system is disabled. Use getExamQuestions instead.');
 }
 
 /**

@@ -5,27 +5,14 @@ import { Question } from '../types';
 import { QuestionPage } from './QuestionPage';
 import { getClassroomById, Classroom, ClassroomSubmission, saveClassroomSubmission } from '../services/classroomService';
 import { getExamQuestionById, ExamQuestionData } from '../services/examQuestionService';
-import { getPropositions, PropositionData } from '../services/propositionService';
 import './Classroom.css';
-
-function mapExamQuestionToProposition(question: ExamQuestionData): PropositionData {
-  return {
-    id: question.id,
-    questionText: question.questionText,
-    difficulty: question.difficulty,
-    category: question.category,
-    expectedAnswer: question.expectedAnswer,
-    scoringRubric: question.scoringRubric,
-    language: question.language,
-  };
-}
 
 export const ClassroomProblemPage: React.FC = () => {
   const { classroomId, propositionId } = useParams<{ classroomId: string; propositionId: string }>();
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
 
-  const [proposition, setProposition] = useState<PropositionData | null>(null);
+  const [question, setQuestion] = useState<ExamQuestionData | null>(null);
   const [classroomName, setClassroomName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,17 +34,9 @@ export const ClassroomProblemPage: React.FC = () => {
         const cls = await getClassroomById(classroomId);
         if (cls) setClassroomName(cls.className);
 
-        const all = await getPropositions('th');
-        let found = all.find(p => p.id === propositionId) || null;
+        const found = await getExamQuestionById(propositionId);
 
-        if (!found) {
-          const examQuestion = await getExamQuestionById(propositionId);
-          if (examQuestion) {
-            found = mapExamQuestionToProposition(examQuestion);
-          }
-        }
-
-        setProposition(found);
+        setQuestion(found);
         if (!found) {
           setError('Problem not found or not assigned.');
         }
@@ -91,7 +70,7 @@ export const ClassroomProblemPage: React.FC = () => {
     );
   }
 
-  if (error || !proposition) {
+  if (error || !question) {
     return (
       <div className="classroom-page">
         <div className="classroom-container">
@@ -109,26 +88,26 @@ export const ClassroomProblemPage: React.FC = () => {
     );
   }
 
-  const question: Question = {
-    id: proposition.id || propositionId!,
-    questionText: proposition.questionText,
-    difficulty: proposition.difficulty,
-    subject: proposition.category,
-    referenceAnswer: proposition.expectedAnswer,
+  const uiQuestion: Question = {
+    id: question.id || propositionId!,
+    questionText: question.questionText,
+    difficulty: question.difficulty,
+    subject: question.category,
+    referenceAnswer: question.expectedAnswer,
     scoringGuideline: 'Use rubric and expected answer to evaluate reasoning.',
     createdAt: new Date(),
-    questionImage: proposition.questionImage,
-    context: proposition.pdfUrl ? `PDF source: ${proposition.pdfFileName}` : undefined,
+    questionImage: question.questionImage,
+    context: question.pdfUrl ? `PDF source: ${question.pdfFileName}` : undefined,
   };
 
   const handleAnalysisComplete = async (result: any) => {
-    if (!proposition || !user) return;
+    if (!question || !user) return;
 
     const submission: Omit<ClassroomSubmission, 'id'> = {
       classroomId: classroomId!,
       studentId,
       studentName: user?.displayName || user?.email || 'Anonymous Student',
-      questionText: proposition.questionText,
+      questionText: question.questionText,
       userAnswer: result.transcription,
       analysisResult: JSON.stringify(result),
       score: result.score,
@@ -149,14 +128,14 @@ export const ClassroomProblemPage: React.FC = () => {
       <div className="classroom-container">
         <div className="classroom-header">
           <h1>🧠 Classroom Problem</h1>
-          <p>{proposition.questionText.substring(0, 120)}{proposition.questionText.length > 120 ? '...' : ''}</p>
+          <p>{question.questionText.substring(0, 120)}{question.questionText.length > 120 ? '...' : ''}</p>
         </div>
 
         <div className="classroom-card">
           <QuestionPage
-            question={question}
+            question={uiQuestion}
             studentId={studentId}
-            proposition={proposition}
+            proposition={question}
             onAnalysisComplete={handleAnalysisComplete}
           />
         </div>

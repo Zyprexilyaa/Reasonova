@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PISA 2022 คณิตศาสตร์ — ห้องฝึกซ้อม</title>
+<style>
+  :root{
+    --paper:#f2ede2;
+    --ink:#1f2a24;
+    --ink-soft:#4b564e;
+    --line:#c9c0a8;
+    --slate:#2f4858;
+    --moss:#5c7a5e;
+    --clay:#a4552f;
+    --gold:#c99a3a;
+    --white:#fffdf8;
+    --wrong:#a4402f;
+    --right:#3d7a52;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      linear-gradient(rgba(0,0,0,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.015) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color:var(--ink);
+    font-family: 'Georgia', 'Noto Serif Thai', serif;
+    line-height:1.55;
+    min-height:100vh;
+  }
+  .utility{ font-family: 'Courier New', monospace; letter-spacing:0.04em; }
+
+  header.top{
+    border-bottom:2px solid var(--ink);
+    padding:22px 6vw 16px;
+    display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;
+  }
+  header.top .brand{
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.18em;
+    color:var(--ink-soft);
+  }
+  header.top h1{
+    margin:2px 0 0;
+    font-size:clamp(1.5rem, 3vw, 2.1rem);
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  header.top .meta{
+    text-align:right;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+  }
+  #progressWrap{
+    display:none;
+    width:220px;
+    height:6px;
+    background:var(--white);
+    border:1px solid var(--ink);
+    border-radius:20px;
+    overflow:hidden;
+  }
+  #progressBar{
+    height:100%;
+    width:0%;
+    background:var(--slate);
+    transition:width .3s ease;
+  }
+
+  main{
+    max-width:920px;
+    margin:0 auto;
+    padding:36px 6vw 90px;
+  }
+
+  /* ---------- SELECT SCREEN ---------- */
+  #selectScreen .intro{
+    max-width:640px;
+    margin-bottom:34px;
+  }
+  #selectScreen .intro p{ color:var(--ink-soft); font-size:1.02rem; }
+  #selectScreen h2{
+    font-size:1.05rem;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    border-bottom:1px solid var(--line);
+    padding-bottom:8px;
+    margin-bottom:18px;
+    color:var(--slate);
+  }
+  .topic-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(250px,1fr));
+    gap:14px;
+    margin-bottom:30px;
+  }
+  .topic-card{
+    background:var(--white);
+    border:1.5px solid var(--ink);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    cursor:pointer;
+    position:relative;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .topic-card:hover{ transform:translateY(-2px); box-shadow:3px 4px 0 var(--ink); }
+  .topic-card.selected{
+    background:#eef1e6;
+    box-shadow:3px 4px 0 var(--moss);
+    border-color:var(--moss);
+  }
+  .topic-card .tag{
+    font-size:0.65rem;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--clay);
+    font-family:'Courier New',monospace;
+  }
+  .topic-card h3{
+    margin:4px 0 6px;
+    font-size:1.05rem;
+  }
+  .topic-card p{
+    margin:0;
+    font-size:0.85rem;
+    color:var(--ink-soft);
+  }
+  .topic-card .count{
+    position:absolute;
+    top:14px; right:14px;
+    font-family:'Courier New',monospace;
+    font-size:0.75rem;
+    color:var(--ink-soft);
+  }
+  .topic-card .check{
+    position:absolute;
+    bottom:14px; right:14px;
+    width:18px; height:18px;
+    border:1.5px solid var(--ink);
+    border-radius:3px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.7rem;
+  }
+  .topic-card.selected .check{ background:var(--moss); border-color:var(--moss); color:white; }
+
+  .select-controls{
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+  .linklike{
+    background:none; border:none; text-decoration:underline;
+    font-family:inherit; font-size:0.85rem; color:var(--slate); cursor:pointer; padding:0;
+  }
+
+  button.primary{
+    background:var(--slate);
+    color:var(--white);
+    border:none;
+    padding:14px 30px;
+    font-size:1rem;
+    font-family:inherit;
+    border-radius:var(--radius);
+    cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button.primary:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
+  button.primary:disabled{ opacity:0.4; cursor:not-allowed; box-shadow:none; }
+  button.secondary{
+    background:var(--white);
+    border:1.5px solid var(--ink);
+    padding:12px 24px;
+    font-family:inherit;
+    font-size:0.95rem;
+    border-radius:var(--radius);
+    cursor:pointer;
+  }
+  button.secondary:hover{ background:#eee; }
+
+  /* ---------- QUIZ SCREEN ---------- */
+  #quizScreen{ display:none; }
+  .q-card{
+    background:var(--white);
+    border:1.5px solid var(--ink);
+    border-radius:var(--radius);
+    padding:26px 28px;
+    margin-bottom:0;
+    box-shadow:4px 4px 0 rgba(31,42,36,0.15);
+  }
+  .q-eyebrow{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'Courier New',monospace;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--clay);
+    margin-bottom:10px;
+  }
+  .q-stimulus{
+    background:#f7f4ea;
+    border-left:3px solid var(--gold);
+    padding:12px 16px;
+    margin-bottom:16px;
+    font-size:0.92rem;
+    color:var(--ink-soft);
+  }
+  .q-stimulus table{ border-collapse:collapse; width:100%; margin-top:8px; font-size:0.85rem;}
+  .q-stimulus th, .q-stimulus td{ border:1px solid var(--line); padding:5px 8px; text-align:left; }
+  .q-stimulus th{ background:#eee4cc; }
+  .q-text{ font-size:1.12rem; margin-bottom:18px; }
+  .q-options label{
+    display:block;
+    background:#fbf9f3;
+    border:1.3px solid var(--line);
+    border-radius:var(--radius);
+    padding:11px 14px;
+    margin-bottom:9px;
+    cursor:pointer;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .q-options label:hover{ border-color:var(--slate); }
+  .q-options input{ margin-right:10px; }
+  .numeric-input{
+    width:100%;
+    max-width:280px;
+    padding:10px 12px;
+    font-family:inherit;
+    font-size:1rem;
+    border:1.5px solid var(--ink);
+    border-radius:var(--radius);
+    background:#fffefc;
+  }
+  .hint-unit{ font-size:0.8rem; color:var(--ink-soft); margin-top:4px; }
+
+  .feedback{
+    margin-top:16px;
+    padding:12px 16px;
+    border-radius:var(--radius);
+    font-size:0.92rem;
+    display:none;
+  }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:#e6efe4; border:1.3px solid var(--right); color:#22462f; }
+  .feedback.incorrect{ background:#f5e6e0; border:1.3px solid var(--wrong); color:#63241a; }
+  .feedback .answer-line{ font-weight:700; margin-top:4px;}
+
+  .q-nav{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:22px; padding-top:16px; gap:12px; flex-wrap:wrap;
+  }
+  .q-nav .left-group{ display:flex; gap:10px; }
+
+  #resultScreen{ display:none; text-align:center; }
+  #resultScreen .score-big{
+    font-size:4rem;
+    font-weight:700;
+    color:var(--slate);
+    margin:10px 0 0;
+  }
+  #resultScreen .score-label{
+    font-family:'Courier New',monospace;
+    text-transform:uppercase;
+    letter-spacing:0.15em;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+  }
+  .result-breakdown{
+    text-align:left;
+    max-width:520px;
+    margin:34px auto 30px;
+    border-top:1px solid var(--line);
+  }
+  .result-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 4px;
+    border-bottom:1px solid var(--line);
+    font-size:0.92rem;
+  }
+  .result-row .mark{
+    font-family:'Courier New',monospace;
+    font-weight:700;
+  }
+  .mark.ok{ color:var(--right); }
+  .mark.no{ color:var(--wrong); }
+
+  footer.pagefoot{
+    text-align:center;
+    font-size:0.75rem;
+    color:var(--ink-soft);
+    padding:30px 6vw 40px;
+  }
+
+  @media (max-width:600px){
+    header.top{ flex-direction:column; align-items:flex-start; }
+    header.top .meta{ text-align:left; }
+    .q-card{ padding:20px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="brand">OECD · PISA 2022 Draft Framework — Illustrative Items</div>
+    <h1>ห้องฝึกซ้อมคณิตศาสตร์ PISA</h1>
+  </div>
+  <div class="meta">
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="headerStatus">เลือกแนวข้อที่อยากฝึกด้านล่าง</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- SELECT SCREEN -->
+  <section id="selectScreen">
+    <div class="intro">
+      <p>ข้อสอบทั้งหมดดัดแปลงจากตัวอย่างข้อสอบ (illustrative items) ใน PISA 2022 Mathematics Framework (Draft) — เลือกแนวข้อที่อยากฝึก แล้วระบบจะรวมเฉพาะข้อจากหมวดที่เลือกให้เป็นชุดเดียว</p>
+    </div>
+
+    <h2>เลือกแนวข้อ (เลือกได้หลายหมวด)</h2>
+    <div class="topic-grid" id="topicGrid"></div>
+
+    <div class="select-controls">
+      <button class="linklike" id="selectAllBtn">เลือกทั้งหมด</button>
+      <button class="linklike" id="clearAllBtn">ล้างการเลือก</button>
+      <span class="utility" id="selectedCount" style="font-size:0.8rem;color:var(--ink-soft);">เลือกแล้ว 0 ข้อ</span>
+    </div>
+
+    <button class="primary" id="startBtn" disabled>เริ่มทำข้อสอบ →</button>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="quizScreen">
+    <div class="q-card" id="qCard"></div>
+    <div class="q-nav">
+      <div class="left-group">
+        <button class="secondary" id="quitBtn">← กลับไปเลือกหมวด</button>
+      </div>
+      <button class="primary" id="nextBtn">ตรวจคำตอบ</button>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="resultScreen">
+    <div class="score-label">คะแนนของคุณ</div>
+    <div class="score-big" id="scoreBig">0/0</div>
+    <p id="scoreMsg" style="color:var(--ink-soft);"></p>
+    <div class="result-breakdown" id="resultBreakdown"></div>
+    <button class="secondary" id="retryBtn">ทำชุดนี้อีกครั้ง</button>
+    <button class="primary" id="backBtn">เลือกหมวดใหม่</button>
+  </section>
+
+</main>
+
+<footer class="pagefoot">
+  ดัดแปลงจากตัวอย่างข้อสอบใน PISA 2022 Mathematics Framework (Draft), OECD, November 2018 — ใช้เพื่อการฝึกซ้อมเท่านั้น
+</footer>
+
+<script>
+/* ===================== QUESTION BANK ===================== */
+const QUESTIONS = [
+
+/* ---------------- SMARTPHONE USE ---------------- */
+{
+  id:'sp1', topic:'smartphone',
+  stimulus:`<strong>สเปรดชีตแสดงประชากร (ล้านคน) และจำนวนผู้ใช้สมาร์ทโฟน (ล้านคน) ของประเทศต่างๆ ในเอเชีย</strong>
+  <table><tr><th>ประเทศ</th><th>ประชากร (B)</th><th>ผู้ใช้สมาร์ทโฟน (C)</th></tr>
+  <tr><td>Bangladesh</td><td>166.735</td><td>8.921</td></tr>
+  <tr><td>Indonesia</td><td>266.357</td><td>67.570</td></tr>
+  <tr><td>Japan</td><td>125.738</td><td>65.282</td></tr></table>`,
+  text:'ต้องการหา "สัดส่วนผู้ใช้สมาร์ทโฟน" ของแต่ละประเทศ (คอลัมน์ D) ควรใช้สูตรใดกับคอลัมน์ B และ C?',
+  type:'mc',
+  options:['B ÷ C','(B + C) ÷ C','C ÷ B','B ÷ (B + C)'],
+  answer:2,
+  explain:'สัดส่วนผู้ใช้สมาร์ทโฟน = จำนวนผู้ใช้ ÷ ประชากรทั้งหมด = C ÷ B'
+},
+{
+  id:'sp2', topic:'smartphone',
+  stimulus:`<strong>ข้อมูลสัดส่วนผู้ใช้สมาร์ทโฟน (%) ถูกเพิ่มในคอลัมน์ D แล้ว</strong>
+  <table><tr><th>ประเทศ</th><th>ประชากร</th><th>ผู้ใช้ (ล้าน)</th><th>สัดส่วน</th></tr>
+  <tr><td>Bangladesh</td><td>166.735</td><td>8.921</td><td>5%</td></tr>
+  <tr><td>Indonesia</td><td>266.357</td><td>67.570</td><td>25%</td></tr>
+  <tr><td>Japan</td><td>125.738</td><td>65.282</td><td>52%</td></tr>
+  <tr><td>Pakistan</td><td>200.663</td><td>23.228</td><td>12%</td></tr></table>`,
+  text:'ข้อความนี้จริงหรือเท็จ: "ประเทศที่มีประชากรมากที่สุด (Indonesia) ก็มีจำนวนผู้ใช้สมาร์ทโฟนมากที่สุดด้วย"',
+  type:'tf',
+  answer:true,
+  explain:'จากข้อมูลที่ให้ Indonesia มีประชากรมากสุด (266.357 ล้าน) และก็มีผู้ใช้สมาร์ทโฟนมากสุดในกลุ่มนี้ (67.570 ล้าน) จึงเป็นจริง'
+},
+{
+  id:'sp3', topic:'smartphone',
+  stimulus:`กราฟแสดงว่าประเทศที่มี "ค่าแรงขั้นต่ำต่อชั่วโมง (Zeds)" สูง เช่น Turkey และ Japan มีสัดส่วนผู้ใช้สมาร์ทโฟนสูงตามไปด้วย ในขณะที่กราฟเทียบกับ "ประชากร" ไม่มีแนวโน้มชัดเจนแบบนี้`,
+  text:'จากข้อมูล ตัวแปรใดที่มีความสัมพันธ์เชิงบวกกับสัดส่วนผู้ใช้สมาร์ทโฟนชัดเจนกว่า?',
+  type:'mc',
+  options:['ประชากร (Population)','ค่าแรงขั้นต่ำต่อชั่วโมง (Minimum hourly wage)'],
+  answer:1,
+  explain:'เมื่อค่าแรงขั้นต่ำสูงขึ้น สัดส่วนผู้ใช้สมาร์ทโฟนก็มีแนวโน้มสูงขึ้นตาม แต่ประชากรไม่มีความสัมพันธ์ชัดเจนแบบนั้น'
+},
+
+/* ---------------- BEAUTY OF POWERS ---------------- */
+{
+  id:'bp1', topic:'powers',
+  stimulus:`8 × 8 × 8 × 8 = 8⁴ (ตัวคูณซ้ำ 4 ตัว) และ 7 × 7 × 7 × 7 × 7 × 7 = 7⁶ (ตัวคูณซ้ำ 6 ตัว)`,
+  text:'ข้อความนี้จริงหรือเท็จ: "เลข 8¹⁶ มีค่ามากกว่าเลข 8¹⁵ อยู่ 8 เท่า"',
+  type:'tf',
+  answer:true,
+  explain:'8¹⁶ = 8¹⁵ × 8 ดังนั้น 8¹⁶ มากกว่า 8¹⁵ อยู่ 8 เท่าจริง'
+},
+{
+  id:'bp2', topic:'powers',
+  text:'ข้อความนี้จริงหรือเท็จ: "เลข 8¹⁰ มีค่ามากกว่าเลข 8 อยู่ 10 เท่า"',
+  type:'tf',
+  answer:false,
+  explain:'8¹⁰ = 8 × 8⁹ ดังนั้นมากกว่า 8 อยู่ 8⁹ เท่า ไม่ใช่ 10 เท่า'
+},
+{
+  id:'bp3', topic:'powers',
+  text:'ค่าของ (−5)⁴³ + (−1)⁴³ + (5)⁴³ เท่ากับเท่าไร?',
+  type:'mc',
+  options:['−1','1','0','5'],
+  answer:0,
+  explain:'เนื่องจากเลขชี้กำลัง 43 เป็นเลขคี่: (−5)⁴³ = −(5⁴³) จึงหักล้างกับ (5)⁴³ พอดี เหลือ 0 แล้วบวกกับ (−1)⁴³ = −1 ผลรวมคือ −1'
+},
+{
+  id:'bp4', topic:'powers',
+  stimulus:`เลขยกกำลังของ 7 เก้าตัวแรก: 7¹=7, 7²=49, 7³=343, 7⁴=2401, 7⁵=16807, 7⁶=117649, 7⁷=823543, 7⁸=5764801, 7⁹=40353607<br>
+  สังเกตหลักหน่วยสุดท้าย: 7, 9, 3, 1, 7, 9, 3, 1, 7 — วนซ้ำทุก 4 รอบ`,
+  text:'หลักหน่วยสุดท้ายของ 7¹⁹⁰ คือเลขอะไร? (ใบ้: 190 ÷ 4 เหลือเศษ 2)',
+  type:'mc',
+  options:['1','3','7','9'],
+  answer:1,
+  explain:'190 ÷ 4 = 47 เหลือเศษ 2 ซึ่งตรงกับรูปแบบของ 7² คือลงท้ายด้วย 9'
+},
+
+/* ---------------- ALWAYS SOMETIMES NEVER ---------------- */
+{
+  id:'asn1', topic:'asn',
+  stimulus:`"จำนวนที่หารด้วย 4 ลงตัว ก็หารด้วย 2 ลงตัวด้วย" เป็นจริงเสมอ (ALWAYS) เพราะ 2 เป็นตัวประกอบของ 4<br>
+  "จำนวนที่หารด้วย 9 ลงตัว ก็หารด้วย 6 ลงตัวด้วย" เป็นจริงบางครั้ง (SOMETIMES) เช่น 36 หารด้วยทั้ง 9 และ 6 ลงตัว แต่ 27 หารด้วย 9 ลงตัวแต่หารด้วย 6 ไม่ลงตัว<br>
+  "ผลบวกของเลขคี่สองตัวเป็นเลขคี่" ไม่จริงเลย (NEVER) เพราะผลบวกของเลขคี่สองตัวเป็นเลขคู่เสมอ`,
+  text:'ข้อความ "เด็กหญิงอายุ 14 ปี เคยมีความสูงเป็นครึ่งหนึ่งของความสูงปัจจุบันมาก่อนในชีวิต" ควรจัดอยู่ในหมวดใด?',
+  type:'mc',
+  options:['ALWAYS (จริงเสมอ)','SOMETIMES (จริงบางครั้ง)','NEVER (ไม่จริงเลย)'],
+  answer:0,
+  explain:'เด็กทุกคนเกิดมาตัวเล็กและสูงขึ้นเรื่อยๆ ดังนั้นต้องเคยมีช่วงที่ความสูงเป็นครึ่งหนึ่งของปัจจุบันเสมอ (ALWAYS)'
+},
+{
+  id:'asn2', topic:'asn',
+  text:'ข้อความ "เด็กหญิงอายุ 14 ปี สูงกว่าเด็กหญิงอายุ 10 ปี" ควรจัดอยู่ในหมวดใด?',
+  type:'mc',
+  options:['ALWAYS (จริงเสมอ)','SOMETIMES (จริงบางครั้ง)','NEVER (ไม่จริงเลย)'],
+  answer:1,
+  explain:'โดยทั่วไปเด็กโตกว่าจะสูงกว่า แต่ก็มีข้อยกเว้นที่เด็ก 10 ขวบอาจสูงกว่าเด็ก 14 ปีบางคนได้ จึงเป็น SOMETIMES'
+},
+{
+  id:'asn3', topic:'asn',
+  text:'ข้อความ "เมื่อนำจำนวนเต็มมาคูณกับตัวมันเอง ผลลัพธ์จะเป็นเลขคู่" ควรจัดอยู่ในหมวดใด?',
+  type:'mc',
+  options:['ALWAYS (จริงเสมอ)','SOMETIMES (จริงบางครั้ง)','NEVER (ไม่จริงเลย)'],
+  answer:1,
+  explain:'ถ้าจำนวนเต็มเป็นเลขคู่ ผลคูณจะเป็นเลขคู่ แต่ถ้าเป็นเลขคี่ ผลคูณจะเป็นเลขคี่ จึงเป็น SOMETIMES'
+},
+{
+  id:'asn4', topic:'asn',
+  text:'ข้อความ "การเพิ่มจำนวนเป็นสองเท่าของจำนวนเต็มใดๆ จะได้ผลลัพธ์เป็นเลขคู่" ควรจัดอยู่ในหมวดใด?',
+  type:'mc',
+  options:['ALWAYS (จริงเสมอ)','SOMETIMES (จริงบางครั้ง)','NEVER (ไม่จริงเลย)'],
+  answer:0,
+  explain:'จำนวนใดๆ คูณ 2 จะได้ผลลัพธ์หารด้วย 2 ลงตัวเสมอ จึงเป็นเลขคู่เสมอ (ALWAYS)'
+},
+{
+  id:'asn5', topic:'asn',
+  text:'ข้อความ "การหารเลขคี่จำนวนเต็มด้วย 2 จะได้ผลลัพธ์เป็นจำนวนเต็ม" ควรจัดอยู่ในหมวดใด?',
+  type:'mc',
+  options:['ALWAYS (จริงเสมอ)','SOMETIMES (จริงบางครั้ง)','NEVER (ไม่จริงเลย)'],
+  answer:2,
+  explain:'เลขคี่หารด้วย 2 จะไม่มีทางได้จำนวนเต็มเลย (เช่น 7÷2 = 3.5) จึงเป็น NEVER'
+},
+
+/* ---------------- TILING ---------------- */
+{
+  id:'tile1', topic:'tiling',
+  stimulus:`ช่างปูกระเบื้องมีกระเบื้อง 2 แบบ: Tile A (ลายทแยง) และ Tile B (ลายกากบาท) รูปแบบการปูคือแถวคี่เริ่มด้วย A แถวคู่เริ่มด้วย B แล้วสลับ A,B ไปเรื่อยๆ ในแต่ละแถว`,
+  text:'ในแถวที่ 1 (แถวคี่) ตำแหน่งที่ 3 ควรเป็นกระเบื้องแบบใด? (ตำแหน่งที่ 1=A, ตำแหน่งที่ 2=B, ...)',
+  type:'mc',
+  options:['Tile A','Tile B'],
+  answer:0,
+  explain:'แถวคี่เริ่มด้วย A แล้วสลับ A,B,A,B,... ตำแหน่งที่ 3 (คี่) จึงเป็น Tile A'
+},
+{
+  id:'tile2', topic:'tiling',
+  stimulus:`ใช้ตำแหน่ง (m, n) โดย m คือคอลัมน์ (แนวนอน) และ n คือแถว (แนวตั้ง) เริ่มนับจาก 1`,
+  text:'กฎข้อใดต่อไปนี้ถูกต้องสำหรับการทำนายกระเบื้องที่ตำแหน่ง (m, n) โดยดูจากรูปแบบตาราง (1,1)=B, (2,1)=A, (1,2)=A, (2,2)=B?',
+  type:'mc',
+  options:[
+    'ถ้า m + n เป็นเลขคี่ ใช้ Tile A มิฉะนั้นใช้ Tile B',
+    'ถ้า m + n เป็นเลขคู่ ใช้ Tile A มิฉะนั้นใช้ Tile B',
+    'ถ้า m × n เป็นเลขคี่ ใช้ Tile A มิฉะนั้นใช้ Tile B',
+    'ถ้า m และ n เป็นเลขคี่ทั้งคู่ ใช้ Tile A มิฉะนั้นใช้ Tile B'
+  ],
+  answer:0,
+  explain:'(1,1): 1+1=2(คู่)→B ตรงกับ, (2,1): 2+1=3(คี่)→A ตรงกับ, (1,2): 1+2=3(คี่)→A ตรงกับ ดังนั้นกฎ "m+n เป็นเลขคี่ ใช้ A" ถูกต้อง'
+},
+{
+  id:'tile3', topic:'tiling',
+  stimulus:`ลองมองรูปแบบการปูกระเบื้องเป็นตาราง 3×3 ที่ซ้ำกันไปเรื่อยๆ:<br>
+  A B C<br>
+  B A C<br>
+  B C A`,
+  text:'ถ้าตาราง 3×3 หน่วยนี้ถูกทำซ้ำในแนวเฉียง แถวที่ 2 ของหน่วยถัดไป (ทางขวา) ควรเริ่มต้นด้วยตัวอักษรใด เพื่อให้รูปแบบต่อเนื่องกันตามแนวทแยง?',
+  type:'mc',
+  options:['A','B','C'],
+  answer:1,
+  explain:'จากรูปแบบการปูกระเบื้องต่อเนื่อง หน่วย 3×3 ที่ซ้ำกันในแนวทแยงจะรักษาลำดับ B ในตำแหน่งเริ่มต้นของแถวที่ 2 เสมอ'
+},
+
+/* ---------------- PURCHASING DECISION ---------------- */
+{
+  id:'pd1', topic:'purchasing',
+  stimulus:`Andrea กำลังดูรีวิวหูฟังออนไลน์ จากคะแนนรีวิวทั้งหมด 163 รีวิว: 5 ดาว 47 (29%), 4 ดาว 41 (25%), 3 ดาว 34 (21%), 2 ดาว 28 (17%), 1 ดาว 13 (8%)<br>
+  ในรีวิว 1 และ 2 ดาว (รวม 41 รีวิว) เธอแยกเหตุผลได้ดังนี้: มาช้า 13, ไม่มาถึงเลย 4, สายชำรุด/หาย 7, หูฟังเสีย 4, บรรจุภัณฑ์ไม่สวย 5, ให้คะแนนผิด 8`,
+  text:'กี่เปอร์เซ็นต์ของรีวิวทั้งหมด (163 รีวิว) ที่เกี่ยวข้องกับ "คุณภาพสินค้าไม่ดี" (สายชำรุด + หูฟังเสีย = 7+4 = 11 รีวิว)? (ตอบเป็นตัวเลขทศนิยม 1 ตำแหน่ง ไม่ต้องใส่ %)',
+  type:'numeric',
+  unit:'%',
+  answer:6.7,
+  tolerance:0.3,
+  explain:'11 ÷ 163 × 100 ≈ 6.7%'
+},
+{
+  id:'pd2', topic:'purchasing',
+  text:'จากรีวิว 1-2 ดาวทั้งหมด 41 รีวิว กี่เปอร์เซ็นต์ที่เกี่ยวกับ "สินค้ามาช้าหรือไม่มาถึงเลย" (13+4 = 17 รีวิว)? (ตอบเป็นตัวเลขทศนิยม 1 ตำแหน่ง ไม่ต้องใส่ %)',
+  type:'numeric',
+  unit:'%',
+  answer:41.5,
+  tolerance:0.5,
+  explain:'17 ÷ 41 × 100 ≈ 41.5%'
+},
+
+/* ---------------- NAVIGATION ---------------- */
+{
+  id:'nav1', topic:'navigation',
+  stimulus:`บนแผนที่แบบตาราง จุด A และ B เชื่อมกันด้วยเส้นทแยงตรง (เส้นสีแดง) แต่การเดินทางจริงต้องเดินตามถนน (แนวนอน/แนวตั้งเท่านั้น) Ann, Bob, Corey ต่างเลือกเส้นทางคนละแบบ (อยู่ใต้เส้นทแยง / ข้ามเส้นทแยงบ่อยที่สุด / อยู่เหนือเส้นทแยง) แต่ทุกเส้นทางมีความยาวเท่ากันเสมอ`,
+  text:'เพราะเหตุใดเส้นทางทั้งสามแบบ (ของ Ann, Bob, Corey) จึงมีความยาวเท่ากันเสมอ แม้จะเดินคนละเส้นทาง?',
+  type:'mc',
+  options:[
+    'เพราะทุกเส้นทางเป็นเส้นตรงเหมือนกัน',
+    'เพราะจำนวนก้าวที่ต้องเดินไปทางขวา (แนวนอน) และขึ้นบน (แนวตั้ง) รวมกันเท่ากันเสมอ ไม่ว่าจะสลับลำดับอย่างไร',
+    'เพราะ Ann, Bob และ Corey เดินด้วยความเร็วเท่ากัน',
+    'เพราะระยะทางในตารางไม่มีผลต่อความยาวเส้นทาง'
+  ],
+  answer:1,
+  explain:'ไม่ว่าจะเลือกเดินขวาหรือขึ้นก่อนหลังอย่างไร จำนวนหน่วยที่ต้องเดินในแนวนอนรวมและแนวตั้งรวมจะเท่ากันเสมอ (เหมือนหลักการของ taxicab geometry) ทำให้ระยะทางรวมเท่ากัน'
+},
+{
+  id:'nav2', topic:'navigation',
+  stimulus:`มีการเพิ่มถนนแนวทแยง 3 เส้นบนแผนที่ เดิมเส้นทางสั้นสุดจาก C ไป B (ไม่ใช้ทแยง) ยาว 7 หน่วย`,
+  text:'ถ้าถนนแนวทแยงเส้นหนึ่งพาดผ่านเส้นทางระหว่าง C และ B ในทิศทางที่ตรงกับเส้นตรง C-B พอดี ข้อความ "มีเส้นทางที่สั้นกว่า 7 หน่วยได้" น่าจะเป็นจริงหรือเท็จ?',
+  type:'tf',
+  answer:true,
+  explain:'ถนนทแยงที่ตรงแนวเดียวกับเส้นตรงเชื่อม C-B จะช่วยตัดระยะทาง เพราะเส้นทแยงมีระยะสั้นกว่าการเดินเป็นขั้นบันได (แนวนอน+แนวตั้ง) ตามหลักพีทาโกรัส'
+},
+
+/* ---------------- SAVINGS SIMULATION ---------------- */
+{
+  id:'sav1', topic:'savings',
+  stimulus:`Sizwe ต้องการออมเงินไว้ใช้ตอนเรียนมหาวิทยาลัย ตัวแปรที่เกี่ยวข้อง: เงินฝากต่อเดือน, ระยะเวลาออม (เดือน), อัตราดอกเบี้ยต่อปี, และยอดออมรวม`,
+  text:'ถ้า Sizwe ฝากเงิน 60 Zeds ต่อเดือน เป็นเวลา 48 เดือน โดยไม่มีดอกเบี้ยเลย (0%) เธอจะมีเงินออมรวมทั้งหมดกี่ Zeds?',
+  type:'numeric',
+  unit:'Zeds',
+  answer:2880,
+  tolerance:0,
+  explain:'60 × 48 = 2,880 Zeds (ไม่มีดอกเบี้ยจึงเป็นแค่ผลรวมเงินฝากทั้งหมด)'
+},
+{
+  id:'sav2', topic:'savings',
+  text:'ถ้า Sizwe ต้องการออมเงินให้ได้ 4,000 Zeds ภายใน 40 เดือน โดยไม่มีดอกเบี้ยเลย เธอต้องฝากเดือนละกี่ Zeds?',
+  type:'numeric',
+  unit:'Zeds',
+  answer:100,
+  tolerance:0,
+  explain:'4,000 ÷ 40 = 100 Zeds ต่อเดือน'
+},
+{
+  id:'sav3', topic:'savings',
+  stimulus:`Sizwe สังเกตว่า "เมื่อไม่มีดอกเบี้ยและเพิ่มเงินฝากต่อเดือนเป็นสองเท่า ระยะเวลาออมจะลดลงครึ่งหนึ่ง แต่เมื่อมีดอกเบี้ยแล้วเพิ่มเงินฝากเป็นสองเท่า ระยะเวลาจะไม่ลดลงครึ่งหนึ่งพอดี"`,
+  text:'ข้อสังเกตของ Sizwe เป็นจริงเสมอหรือไม่?',
+  type:'mc',
+  options:['จริงเสมอ ไม่ว่าจะมีดอกเบี้ยหรือไม่','จริงบางครั้ง ขึ้นอยู่กับอัตราดอกเบี้ย'],
+  answer:1,
+  explain:'เมื่อไม่มีดอกเบี้ย ความสัมพันธ์เป็นเชิงเส้นตรง (linear) การเพิ่มเงินฝากเป็น 2 เท่าจึงลดเวลาลงครึ่งหนึ่งพอดี แต่เมื่อมีดอกเบี้ย ผลของดอกเบี้ยทบต้นทำให้ความสัมพันธ์ไม่เป็นเชิงเส้นตรงอีกต่อไป'
+},
+{
+  id:'sav4', topic:'savings',
+  text:'สำหรับยอดออมเป้าหมายที่ตั้งไว้คงที่ และเงินฝากต่อเดือนที่กำหนดไว้คงที่ การเพิ่มอัตราดอกเบี้ยจะช่วยลดระยะเวลาออมได้มากกว่า เมื่อเงินฝากต่อเดือนเป็นแบบใด?',
+  type:'mc',
+  options:['เมื่อเงินฝากต่อเดือนน้อย (small)','เมื่อเงินฝากต่อเดือนมาก (large)'],
+  answer:0,
+  explain:'เมื่อเงินฝากต่อเดือนน้อย ต้องใช้เวลานานกว่าจะถึงเป้าหมาย ทำให้ดอกเบี้ยทบต้นมีเวลาสะสมผลกระทบมากกว่า จึงลดระยะเวลาได้มากกว่าตามสัดส่วน'
+},
+
+];
+
+/* ===================== TOPIC METADATA ===================== */
+const TOPICS = [
+  {key:'smartphone', tag:'CBAM · Spreadsheet', title:'Smartphone Use', desc:'อ่านตาราง สเปรดชีต และกราฟ วิเคราะห์สัดส่วนและความสัมพันธ์ระหว่างตัวแปร'},
+  {key:'powers', tag:'Reasoning · Number', title:'Beauty of Powers', desc:'เลขยกกำลัง รูปแบบตัวเลข และการให้เหตุผลเชิงคณิตศาสตร์'},
+  {key:'asn', tag:'Reasoning · Logic', title:'Always Sometimes Never', desc:'จำแนกข้อความว่าจริงเสมอ จริงบางครั้ง หรือไม่จริงเลย'},
+  {key:'tiling', tag:'Computational Thinking', title:'Tiling', desc:'รูปแบบเรขาคณิต การให้เหตุผลเชิงอัลกอริทึม และการทำนายรูปแบบ'},
+  {key:'purchasing', tag:'Uncertainty & Data', title:'Purchasing Decision', desc:'วิเคราะห์รีวิวสินค้า สัดส่วนร้อยละ และการตัดสินใจแบบมีเงื่อนไข'},
+  {key:'navigation', tag:'Space & Shape', title:'Navigation', desc:'เส้นทางบนตาราง ระยะทาง และการให้เหตุผลเชิงเรขาคณิต'},
+  {key:'savings', tag:'Quantity · Simulation', title:'Savings Simulation', desc:'การออมเงิน ดอกเบี้ย และความสัมพันธ์แบบไม่เชิงเส้น'},
+];
+
+/* ===================== STATE ===================== */
+let selectedTopics = new Set();
+let quizQuestions = [];
+let currentIndex = 0;
+let userAnswers = {};
+let answeredCurrent = false;
+
+/* ===================== BUILD TOPIC GRID ===================== */
+const topicGrid = document.getElementById('topicGrid');
+TOPICS.forEach(t=>{
+  const count = QUESTIONS.filter(q=>q.topic===t.key).length;
+  const card = document.createElement('div');
+  card.className='topic-card';
+  card.dataset.key = t.key;
+  card.innerHTML = `
+    <div class="tag">${t.tag}</div>
+    <div class="count utility">${count} ข้อ</div>
+    <h3>${t.title}</h3>
+    <p>${t.desc}</p>
+    <div class="check"></div>
+  `;
+  card.addEventListener('click', ()=>{
+    if(selectedTopics.has(t.key)){ selectedTopics.delete(t.key); card.classList.remove('selected'); }
+    else { selectedTopics.add(t.key); card.classList.add('selected'); }
+    updateSelectionUI();
+  });
+  topicGrid.appendChild(card);
+});
+
+function updateSelectionUI(){
+  const totalQ = QUESTIONS.filter(q=>selectedTopics.has(q.topic)).length;
+  document.getElementById('selectedCount').textContent = `เลือกแล้ว ${selectedTopics.size} หมวด (${totalQ} ข้อ)`;
+  document.getElementById('startBtn').disabled = selectedTopics.size===0;
+}
+
+document.getElementById('selectAllBtn').addEventListener('click', ()=>{
+  selectedTopics = new Set(TOPICS.map(t=>t.key));
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.add('selected'));
+  updateSelectionUI();
+});
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+  selectedTopics.clear();
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('selected'));
+  updateSelectionUI();
+});
+
+/* ===================== START QUIZ ===================== */
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  quizQuestions = QUESTIONS.filter(q=>selectedTopics.has(q.topic));
+  currentIndex = 0;
+  userAnswers = {};
+  document.getElementById('selectScreen').style.display='none';
+  document.getElementById('quizScreen').style.display='block';
+  document.getElementById('progressWrap').style.display='block';
+  renderQuestion();
+});
+
+document.getElementById('quitBtn').addEventListener('click', ()=>{
+  document.getElementById('quizScreen').style.display='none';
+  document.getElementById('progressWrap').style.display='none';
+  document.getElementById('selectScreen').style.display='block';
+  document.getElementById('headerStatus').textContent='เลือกแนวข้อที่อยากฝึกด้านล่าง';
+});
+
+/* ===================== RENDER QUESTION ===================== */
+function renderQuestion(){
+  answeredCurrent = false;
+  const q = quizQuestions[currentIndex];
+  const card = document.getElementById('qCard');
+  const topicInfo = TOPICS.find(t=>t.key===q.topic);
+
+  document.getElementById('progressBar').style.width = `${(currentIndex/quizQuestions.length)*100}%`;
+  document.getElementById('headerStatus').textContent = `ข้อ ${currentIndex+1} จาก ${quizQuestions.length}`;
+
+  let optionsHtml = '';
+  if(q.type==='mc'){
+    optionsHtml = `<div class="q-options">` + q.options.map((opt,i)=>`
+      <label><input type="radio" name="opt" value="${i}"> ${opt}</label>
+    `).join('') + `</div>`;
+  } else if(q.type==='tf'){
+    optionsHtml = `<div class="q-options">
+      <label><input type="radio" name="opt" value="true"> จริง (True)</label>
+      <label><input type="radio" name="opt" value="false"> เท็จ (False)</label>
+    </div>`;
+  } else if(q.type==='numeric'){
+    optionsHtml = `<input type="number" step="any" class="numeric-input" id="numInput" placeholder="พิมพ์คำตอบที่นี่">
+      <div class="hint-unit">หน่วย: ${q.unit||''}</div>`;
+  }
+
+  card.innerHTML = `
+    <div class="q-eyebrow"><span>${topicInfo.title}</span><span>${topicInfo.tag}</span></div>
+    ${q.stimulus? `<div class="q-stimulus">${q.stimulus}</div>` : ''}
+    <div class="q-text">${q.text}</div>
+    ${optionsHtml}
+    <div class="feedback" id="feedbackBox"></div>
+  `;
+  document.getElementById('nextBtn').textContent = 'ตรวจคำตอบ';
+}
+
+/* ===================== CHECK / NEXT ===================== */
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  const q = quizQuestions[currentIndex];
+
+  if(!answeredCurrent){
+    let userVal, isCorrect;
+    if(q.type==='mc'){
+      const sel = document.querySelector('input[name="opt"]:checked');
+      if(!sel){ flashRequire(); return; }
+      userVal = parseInt(sel.value);
+      isCorrect = userVal === q.answer;
+    } else if(q.type==='tf'){
+      const sel = document.querySelector('input[name="opt"]:checked');
+      if(!sel){ flashRequire(); return; }
+      userVal = sel.value === 'true';
+      isCorrect = userVal === q.answer;
+    } else if(q.type==='numeric'){
+      const inp = document.getElementById('numInput');
+      if(inp.value===''){ flashRequire(); return; }
+      userVal = parseFloat(inp.value);
+      const tol = q.tolerance||0;
+      isCorrect = Math.abs(userVal - q.answer) <= tol;
+    }
+    userAnswers[q.id] = {userVal, isCorrect};
+    showFeedback(q, isCorrect);
+    answeredCurrent = true;
+    document.getElementById('nextBtn').textContent = currentIndex < quizQuestions.length-1 ? 'ข้อถัดไป →' : 'ดูผลคะแนน →';
+    return;
+  }
+
+  if(currentIndex < quizQuestions.length-1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+});
+
+function flashRequire(){
+  const fb = document.getElementById('feedbackBox');
+  fb.className='feedback show incorrect';
+  fb.innerHTML = 'กรุณาเลือกหรือกรอกคำตอบก่อนตรวจ';
+}
+
+function showFeedback(q, isCorrect){
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback show ' + (isCorrect?'correct':'incorrect');
+  let answerText='';
+  if(q.type==='mc') answerText = q.options[q.answer];
+  else if(q.type==='tf') answerText = q.answer ? 'จริง (True)' : 'เท็จ (False)';
+  else if(q.type==='numeric') answerText = `${q.answer} ${q.unit||''}`;
+
+  fb.innerHTML = `
+    <div>${isCorrect ? '✓ ถูกต้อง!' : '✗ ยังไม่ถูก'}</div>
+    <div class="answer-line">${isCorrect? '' : 'คำตอบที่ถูกต้อง: ' + answerText}</div>
+    <div style="margin-top:8px; font-weight:400;">${q.explain}</div>
+  `;
+  document.querySelectorAll('input[name="opt"]').forEach(i=>i.disabled=true);
+  const numInput = document.getElementById('numInput');
+  if(numInput) numInput.disabled = true;
+}
+
+/* ===================== RESULTS ===================== */
+function showResults(){
+  document.getElementById('quizScreen').style.display='none';
+  document.getElementById('progressWrap').style.display='none';
+  document.getElementById('resultScreen').style.display='block';
+  document.getElementById('headerStatus').textContent = 'สรุปผลคะแนน';
+
+  const correctCount = Object.values(userAnswers).filter(a=>a.isCorrect).length;
+  const total = quizQuestions.length;
+  document.getElementById('scoreBig').textContent = `${correctCount}/${total}`;
+
+  const pct = Math.round((correctCount/total)*100);
+  let msg = '';
+  if(pct>=85) msg='ยอดเยี่ยมมาก! เข้าใจแนวข้อ PISA ได้ลึกซึ้ง';
+  else if(pct>=60) msg='ทำได้ดี! ลองทบทวนข้อที่พลาดอีกครั้ง';
+  else msg='เริ่มต้นได้ดี ลองฝึกซ้อมเพิ่มในหมวดที่พลาดบ่อย';
+  document.getElementById('scoreMsg').textContent = `${pct}% — ${msg}`;
+
+  const breakdown = document.getElementById('resultBreakdown');
+  breakdown.innerHTML = quizQuestions.map((q,i)=>{
+    const a = userAnswers[q.id];
+    const topicInfo = TOPICS.find(t=>t.key===q.topic);
+    return `<div class="result-row">
+      <span>ข้อ ${i+1} · ${topicInfo.title}</span>
+      <span class="mark ${a.isCorrect?'ok':'no'}">${a.isCorrect?'ถูก':'ผิด'}</span>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('retryBtn').addEventListener('click', ()=>{
+  currentIndex=0; userAnswers={};
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('quizScreen').style.display='block';
+  document.getElementById('progressWrap').style.display='block';
+  renderQuestion();
+});
+
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('selectScreen').style.display='block';
+  document.getElementById('headerStatus').textContent='เลือกแนวข้อที่อยากฝึกด้านล่าง';
+});
+</script>
+
+</body>
+</html>

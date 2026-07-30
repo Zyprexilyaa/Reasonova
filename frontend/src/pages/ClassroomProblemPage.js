@@ -5,24 +5,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { QuestionPage } from './QuestionPage';
 import { getClassroomById, saveClassroomSubmission } from '../services/classroomService';
 import { getExamQuestionById } from '../services/examQuestionService';
-import { getPropositions } from '../services/propositionService';
 import './Classroom.css';
-function mapExamQuestionToProposition(question) {
-    return {
-        id: question.id,
-        questionText: question.questionText,
-        difficulty: question.difficulty,
-        category: question.category,
-        expectedAnswer: question.expectedAnswer,
-        scoringRubric: question.scoringRubric,
-        language: question.language,
-    };
-}
 export const ClassroomProblemPage = () => {
     const { classroomId, propositionId } = useParams();
     const navigate = useNavigate();
     const { user, userRole } = useAuth();
-    const [proposition, setProposition] = useState(null);
+    const [question, setQuestion] = useState(null);
     const [classroomName, setClassroomName] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -41,15 +29,8 @@ export const ClassroomProblemPage = () => {
                 const cls = await getClassroomById(classroomId);
                 if (cls)
                     setClassroomName(cls.className);
-                const all = await getPropositions('th');
-                let found = all.find(p => p.id === propositionId) || null;
-                if (!found) {
-                    const examQuestion = await getExamQuestionById(propositionId);
-                    if (examQuestion) {
-                        found = mapExamQuestionToProposition(examQuestion);
-                    }
-                }
-                setProposition(found);
+                const found = await getExamQuestionById(propositionId);
+                setQuestion(found);
                 if (!found) {
                     setError('Problem not found or not assigned.');
                 }
@@ -70,28 +51,28 @@ export const ClassroomProblemPage = () => {
     if (loading) {
         return (_jsx("div", { className: "classroom-page", children: _jsx("div", { className: "classroom-container", children: _jsx("div", { className: "loading", children: "Loading problem..." }) }) }));
     }
-    if (error || !proposition) {
+    if (error || !question) {
         return (_jsx("div", { className: "classroom-page", children: _jsxs("div", { className: "classroom-container", children: [_jsx("div", { className: "error-alert", children: error || 'Problem not available.' }), _jsx("div", { className: "classroom-footer", children: _jsx("button", { onClick: () => navigate(`/classroom/${classroomId}`), className: "btn btn-outline", children: "\u2190 Back to problems" }) })] }) }));
     }
-    const question = {
-        id: proposition.id || propositionId,
-        questionText: proposition.questionText,
-        difficulty: proposition.difficulty,
-        subject: proposition.category,
-        referenceAnswer: proposition.expectedAnswer,
+    const uiQuestion = {
+        id: question.id || propositionId,
+        questionText: question.questionText,
+        difficulty: question.difficulty,
+        subject: question.category,
+        referenceAnswer: question.expectedAnswer,
         scoringGuideline: 'Use rubric and expected answer to evaluate reasoning.',
         createdAt: new Date(),
-        questionImage: proposition.questionImage,
-        context: proposition.pdfUrl ? `PDF source: ${proposition.pdfFileName}` : undefined,
+        questionImage: question.questionImage,
+        context: question.pdfUrl ? `PDF source: ${question.pdfFileName}` : undefined,
     };
     const handleAnalysisComplete = async (result) => {
-        if (!proposition || !user)
+        if (!question || !user)
             return;
         const submission = {
             classroomId: classroomId,
             studentId,
             studentName: user?.displayName || user?.email || 'Anonymous Student',
-            questionText: proposition.questionText,
+            questionText: question.questionText,
             userAnswer: result.transcription,
             analysisResult: JSON.stringify(result),
             score: result.score,
@@ -106,5 +87,5 @@ export const ClassroomProblemPage = () => {
             console.error('Failed to save classroom submission:', err);
         }
     };
-    return (_jsx("div", { className: "classroom-page", children: _jsxs("div", { className: "classroom-container", children: [_jsxs("div", { className: "classroom-header", children: [_jsx("h1", { children: "\uD83E\uDDE0 Classroom Problem" }), _jsxs("p", { children: [proposition.questionText.substring(0, 120), proposition.questionText.length > 120 ? '...' : ''] })] }), _jsx("div", { className: "classroom-card", children: _jsx(QuestionPage, { question: question, studentId: studentId, proposition: proposition, onAnalysisComplete: handleAnalysisComplete }) }), _jsx("div", { className: "classroom-footer", children: _jsx("button", { onClick: () => navigate(`/classroom/${classroomId}`), className: "btn btn-outline", children: "\u2190 Back to problems" }) })] }) }));
+    return (_jsx("div", { className: "classroom-page", children: _jsxs("div", { className: "classroom-container", children: [_jsxs("div", { className: "classroom-header", children: [_jsx("h1", { children: "\uD83E\uDDE0 Classroom Problem" }), _jsxs("p", { children: [question.questionText.substring(0, 120), question.questionText.length > 120 ? '...' : ''] })] }), _jsx("div", { className: "classroom-card", children: _jsx(QuestionPage, { question: uiQuestion, studentId: studentId, proposition: question, onAnalysisComplete: handleAnalysisComplete }) }), _jsx("div", { className: "classroom-footer", children: _jsx("button", { onClick: () => navigate(`/classroom/${classroomId}`), className: "btn btn-outline", children: "\u2190 Back to problems" }) })] }) }));
 };
