@@ -170,6 +170,80 @@ export const PisaReadingPage: React.FC = () => {
     );
   };
 
+  const renderQuestionBlock = (question: ReadingQuestion, index: number) => {
+    const isOpen = question.type === 'open';
+    const typeLabel = isOpen
+      ? language === 'th' ? 'เขียนตอบ (AI ตรวจ)' : 'Open response (AI checked)'
+      : language === 'th' ? 'เลือกตอบ' : 'Multiple choice';
+
+    return (
+      <div key={question.id} className="pisa-question-box" style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: 14, color: '#5b6774' }}>{language === 'th' ? `ข้อ ${index + 1}` : `Question ${index + 1}`}</p>
+            <p style={{ margin: '8px 0 0', fontWeight: 700, fontSize: 17 }}>{question.text}</p>
+            {question.meta && <p style={{ color: '#566d80', fontSize: 13, marginTop: 8 }}>{question.meta}</p>}
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#eef7ff', color: '#1c5d8b', borderRadius: 999, padding: '6px 12px', fontSize: 12, fontWeight: 700 }}>{typeLabel}</div>
+        </div>
+
+        {isOpen ? (
+          <>
+            <textarea
+              className="pisa-answer-textarea"
+              value={answers[question.id] || ''}
+              onChange={(event) => setAnswers((prev) => ({ ...prev, [question.id]: event.target.value }))}
+              rows={12}
+              placeholder={language === 'th' ? 'พิมพ์คำตอบของคุณที่นี่...' : 'Type your answer here...'}
+              style={{ width: '100%', borderRadius: 12, border: '1px solid #dfeaf5', padding: 12, fontSize: 15, resize: 'vertical', minHeight: 280, marginTop: 16 }}
+            />
+            <div className="pisa-actions" style={{ marginTop: 12 }}>
+              <button className="pisa-btn primary" type="button" onClick={() => handleOpenSubmit(question)} disabled={isSubmitting[question.id]}>
+                {isSubmitting[question.id]
+                  ? (language === 'th' ? 'กำลังตรวจ...' : 'Checking...')
+                  : (language === 'th' ? 'ส่งคำตอบ' : 'Submit answer')}
+              </button>
+            </div>
+            {analysisMap[question.id] && (
+              <div style={{ marginTop: 16 }}>
+                <AnalysisDisplay result={analysisMap[question.id]} />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="pisa-options" style={{ marginTop: 16 }}>
+              {question.options?.map((option, optionIndex) => (
+                <button
+                  key={optionIndex}
+                  type="button"
+                  className={`pisa-option ${selectedChoices[question.id] === option ? 'selected' : ''}`}
+                  onClick={() => setSelectedChoices((prev) => ({ ...prev, [question.id]: option }))}
+                >
+                  <span>{String.fromCharCode(65 + optionIndex)}.</span>
+                  <span>{option}</span>
+                </button>
+              ))}
+            </div>
+            <div className="pisa-actions" style={{ marginTop: 12 }}>
+              <button className="pisa-btn primary" type="button" onClick={() => handleChoiceSubmit(question)}>
+                {language === 'th' ? 'ตรวจคำตอบ' : 'Check answer'}
+              </button>
+            </div>
+            {mcResults[question.id] && (
+              <div className="pisa-answer" style={{ marginTop: 12 }}>
+                <strong>{mcResults[question.id].correct ? (language === 'th' ? 'ถูกต้อง' : 'Correct') : (language === 'th' ? 'ยังไม่ถูกต้อง' : 'Not quite right')}</strong>
+                <p style={{ margin: '8px 0 0' }}>
+                  {language === 'th' ? 'คำตอบที่ถูกต้องคือ' : 'Correct answer is'}: <strong>{mcResults[question.id].answer}</strong>
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
   if (isQuestionView && activeQuestion) {
     return (
       <div className="pisa-assessment-page">
@@ -266,11 +340,12 @@ export const PisaReadingPage: React.FC = () => {
                   ) : (
                     <>
                       <textarea
+                        className="pisa-answer-textarea"
                         value={answers[activeQuestion.id] || ''}
                         onChange={(event) => setAnswers((prev) => ({ ...prev, [activeQuestion.id]: event.target.value }))}
-                        rows={5}
+                        rows={12}
                         placeholder={language === 'th' ? 'พิมพ์คำตอบของคุณที่นี่...' : 'Type your answer here...'}
-                        style={{ width: '100%', borderRadius: 12, border: '1px solid #dfeaf5', padding: 12, fontSize: 15, resize: 'vertical' }}
+                        style={{ width: '100%', borderRadius: 12, border: '1px solid #dfeaf5', padding: 12, fontSize: 15, resize: 'vertical', minHeight: 280 }}
                       />
 
                       <div className="pisa-actions" style={{ marginTop: 12 }}>
@@ -360,11 +435,11 @@ export const PisaReadingPage: React.FC = () => {
           <section className="pisa-card">
             <p className="menu-intro">
               {language === 'th'
-                ? 'เลือกคำถามใดคำถามหนึ่งจากบทนี้เพื่อเริ่มทำและฝึกฝน'
-                : 'Choose a question from this unit to begin.'}
+                ? 'ตอบคำถามทั้งหมดในบทนี้จากบนลงล่าง โดยไม่ต้องเลือกข้อย่อย'
+                : 'Answer all questions in this unit from top to bottom without choosing a separate subquestion.'}
             </p>
-            <div className="menu-grid">
-              {activeUnit.questions.map((question, index) => renderQuestionCard(question, index))}
+            <div style={{ display: 'grid', gap: 20 }}>
+              {activeUnit.questions.map((question, index) => renderQuestionBlock(question, index))}
             </div>
           </section>
         </div>
