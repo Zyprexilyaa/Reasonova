@@ -388,8 +388,8 @@ export const PisaReadingPage: React.FC = () => {
               <h1 className="pisa-title">{activeUnit.title}</h1>
               <p className="pisa-description">
                 {language === 'th'
-                  ? 'อ่านบทความนี้แล้วเลือกคำถามที่ต้องการฝึกจากชุดคำถามของบทนี้'
-                  : 'Read this passage and choose a question from this unit.'}
+                  ? 'อ่านบทความนี้แล้วตอบคำถามทั้งหมดในบทนี้โดยไม่ต้องเลือกข้อย่อย'
+                  : 'Read this passage and answer every question in this unit without selecting one separately.'}
               </p>
             </div>
             <div className="pisa-actions">
