@@ -15,7 +15,7 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const redirectPath = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/';
+  const redirectPath = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/home';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
