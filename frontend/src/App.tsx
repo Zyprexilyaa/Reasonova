@@ -115,6 +115,11 @@ function App() {
                 <PisaReadingPage />
               </ProtectedRoute>
             } />
+            <Route path="/pisa/reading/unit/:unitId" element={
+              <ProtectedRoute>
+                <PisaReadingPage />
+              </ProtectedRoute>
+            } />
             <Route path="/pisa/reading/question/:questionId" element={
               <ProtectedRoute>
                 <PisaReadingPage />

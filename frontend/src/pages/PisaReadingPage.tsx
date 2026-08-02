@@ -21,13 +21,25 @@ type ReadingQuestion = {
   sourcePdfUrl?: string;
 };
 
-const readingQuestions = (readingContent.questions ?? []) as ReadingQuestion[];
+type ReadingUnit = {
+  id: string;
+  title: string;
+  emoji?: string;
+  tags?: string[];
+  passage: string;
+  passageNote?: string;
+  images?: Array<{ id: string; src: string; alt: string; caption: string }>;
+  questions: ReadingQuestion[];
+};
+
+const readingUnits = (readingContent.units ?? []) as ReadingUnit[];
+const allReadingQuestions = readingUnits.flatMap((unit) => unit.questions ?? []);
 
 export const PisaReadingPage: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const { questionId } = useParams<{ questionId: string }>();
+  const { unitId, questionId } = useParams<{ unitId?: string; questionId?: string }>();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [selectedChoices, setSelectedChoices] = useState<Record<string, string>>({});
   const [mcResults, setMcResults] = useState<Record<string, { correct: boolean; selected: string; answer: string }>>({});
@@ -35,11 +47,27 @@ export const PisaReadingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const figures = useMemo(() => readingContent.extractedImages ?? [], []);
-  const isQuestionView = Boolean(questionId && questionId.trim()) && location.pathname.startsWith('/pisa/reading/question/');
+  const activeUnit = useMemo(
+    () => (unitId ? readingUnits.find((unit) => unit.id === unitId) : undefined),
+    [unitId]
+  );
+
   const activeQuestion = useMemo(
-    () => (isQuestionView ? readingQuestions.find((question) => question.id === questionId) : undefined),
-    [isQuestionView, questionId]
+    () => (questionId ? allReadingQuestions.find((question) => question.id === questionId) : undefined),
+    [questionId]
+  );
+
+  const activeQuestionUnit = useMemo(
+    () => activeQuestion ? readingUnits.find((unit) => unit.questions.some((question) => question.id === activeQuestion.id)) : undefined,
+    [activeQuestion]
+  );
+
+  const isQuestionView = Boolean(questionId && questionId.trim()) && location.pathname.startsWith('/pisa/reading/question/');
+  const isUnitView = Boolean(unitId && unitId.trim()) && location.pathname.startsWith('/pisa/reading/unit/');
+
+  const currentImages = useMemo(
+    () => activeUnit?.images ?? activeQuestionUnit?.images ?? [],
+    [activeUnit, activeQuestionUnit]
   );
 
   const handleOpenSubmit = async (question: ReadingQuestion) => {
@@ -101,6 +129,24 @@ export const PisaReadingPage: React.FC = () => {
     }));
   };
 
+  const renderUnitCard = (unit: ReadingUnit, index: number) => {
+    return (
+      <div key={unit.id} className="menu-card" onClick={() => navigate(`/pisa/reading/unit/${unit.id}`)}>
+        <div className="menu-thumb">{unit.emoji || String(index + 1)}</div>
+        <div className="menu-body">
+          <h3 className="menu-title">{unit.title}</h3>
+          <p className="menu-sub">{language === 'th' ? `${unit.questions.length} ข้อ` : `${unit.questions.length} questions`}</p>
+          <div className="menu-tags">
+            {unit.tags?.map((tag) => (
+              <span key={tag}>{tag}</span>
+            ))}
+          </div>
+        </div>
+        <div className="menu-go">›</div>
+      </div>
+    );
+  };
+
   const renderQuestionCard = (question: ReadingQuestion, index: number) => {
     const isOpen = question.type === 'open';
     const typeLabel = isOpen
@@ -114,7 +160,7 @@ export const PisaReadingPage: React.FC = () => {
           <h3 className="menu-title">{question.text}</h3>
           <p className="menu-sub">{question.meta || typeLabel}</p>
           <div className="menu-tags">
-            <span>{language === 'th' ? `ข้อ ${index + 1}` : `Task ${index + 1}`}</span>
+            <span>{language === 'th' ? `ข้อ ${index + 1}` : `Question ${index + 1}`}</span>
             <span>{typeLabel}</span>
             {question.difficulty && <span>{question.difficulty}</span>}
           </div>
@@ -124,7 +170,7 @@ export const PisaReadingPage: React.FC = () => {
     );
   };
 
-  if (activeQuestion) {
+  if (isQuestionView && activeQuestion) {
     return (
       <div className="pisa-assessment-page">
         <div className="pisa-shell">
@@ -139,8 +185,8 @@ export const PisaReadingPage: React.FC = () => {
               </p>
             </div>
             <div className="pisa-actions">
-              <button className="pisa-btn secondary" type="button" onClick={() => navigate('/pisa/reading')}>
-                {language === 'th' ? 'กลับหน้ารายการคำถาม' : 'Back to task list'}
+              <button className="pisa-btn secondary" type="button" onClick={() => navigate(activeQuestionUnit ? `/pisa/reading/unit/${activeQuestionUnit.id}` : '/pisa/reading')}>
+                {language === 'th' ? 'กลับหน้าบทอ่าน' : 'Back to unit'}
               </button>
               <Link className="pisa-btn primary" to="/pisa">
                 {language === 'th' ? 'กลับสู่หน้าหลัก PISA' : 'Back to PISA home'}
@@ -151,29 +197,32 @@ export const PisaReadingPage: React.FC = () => {
           <section className="pisa-card">
             <div className="pisa-question-box">
               <h3>{language === 'th' ? 'บทอ่าน' : 'Reading passage'}</h3>
-              <p style={{ whiteSpace: 'pre-line', lineHeight: 1.8 }}>{readingContent.passage}</p>
+              <p style={{ whiteSpace: 'pre-line', lineHeight: 1.8 }}>{activeQuestionUnit?.passage}</p>
+              {activeQuestionUnit?.passageNote && <p style={{ marginTop: 12, color: '#6b7280', fontSize: 13 }}>{activeQuestionUnit.passageNote}</p>}
             </div>
           </section>
 
-          <section className="pisa-card">
-            <div className="pisa-question-box">
-              <h3>{language === 'th' ? 'ภาพประกอบจากบทอ่าน' : 'Reading figures'}</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-                {figures.map((image) => (
-                  <div key={image.id} style={{ border: '1px solid #dfeaf5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
-                    <img
-                      src={image.src}
-                      alt={image.caption}
-                      style={{ width: '100%', display: 'block', maxHeight: 320, objectFit: 'contain', borderBottom: '1px solid #dfeaf5', background: '#f6fbff' }}
-                    />
-                    <div style={{ padding: '8px 12px', fontSize: 12, color: '#4d6075', fontWeight: 700 }}>
-                      {image.caption}
+          {currentImages.length > 0 && (
+            <section className="pisa-card">
+              <div className="pisa-question-box">
+                <h3>{language === 'th' ? 'ภาพประกอบจากบทอ่าน' : 'Reading figures'}</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+                  {currentImages.map((image) => (
+                    <div key={image.id} style={{ border: '1px solid #dfeaf5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+                      <img
+                        src={image.src}
+                        alt={image.caption}
+                        style={{ width: '100%', display: 'block', maxHeight: 320, objectFit: 'contain', borderBottom: '1px solid #dfeaf5', background: '#f6fbff' }}
+                      />
+                      <div style={{ padding: '8px 12px', fontSize: 12, color: '#4d6075', fontWeight: 700 }}>
+                        {image.caption}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           <section className="pisa-card">
             <div className="pisa-question-box">
@@ -254,6 +303,75 @@ export const PisaReadingPage: React.FC = () => {
     );
   }
 
+  if (isUnitView && activeUnit) {
+    return (
+      <div className="reading-page">
+        <div className="reading-shell">
+          <section className="pisa-card reading-hero">
+            <div>
+              <div className="pisa-eyebrow">📖 Reading</div>
+              <h1 className="pisa-title">{activeUnit.title}</h1>
+              <p className="pisa-description">
+                {language === 'th'
+                  ? 'อ่านบทความนี้แล้วเลือกคำถามที่ต้องการฝึกจากชุดคำถามของบทนี้'
+                  : 'Read this passage and choose a question from this unit.'}
+              </p>
+            </div>
+            <div className="pisa-actions">
+              <button className="pisa-btn secondary" type="button" onClick={() => navigate('/pisa/reading')}>
+                {language === 'th' ? 'กลับหน้าบทอ่าน' : 'Back to reading menu'}
+              </button>
+              <Link className="pisa-btn primary" to="/pisa">
+                {language === 'th' ? 'กลับสู่หน้าหลัก PISA' : 'Back to PISA home'}
+              </Link>
+            </div>
+          </section>
+
+          <section className="pisa-card">
+            <div className="pisa-question-box">
+              <h3>{language === 'th' ? 'บทอ่าน' : 'Reading passage'}</h3>
+              <p style={{ whiteSpace: 'pre-line', lineHeight: 1.8 }}>{activeUnit.passage}</p>
+              {activeUnit.passageNote && <p style={{ marginTop: 12, color: '#6b7280', fontSize: 13 }}>{activeUnit.passageNote}</p>}
+            </div>
+          </section>
+
+          {currentImages.length > 0 && (
+            <section className="pisa-card">
+              <div className="pisa-question-box">
+                <h3>{language === 'th' ? 'ภาพประกอบจากบทอ่าน' : 'Reading figures'}</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+                  {currentImages.map((image) => (
+                    <div key={image.id} style={{ border: '1px solid #dfeaf5', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
+                      <img
+                        src={image.src}
+                        alt={image.caption}
+                        style={{ width: '100%', display: 'block', maxHeight: 320, objectFit: 'contain', borderBottom: '1px solid #dfeaf5', background: '#f6fbff' }}
+                      />
+                      <div style={{ padding: '8px 12px', fontSize: 12, color: '#4d6075', fontWeight: 700 }}>
+                        {image.caption}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          <section className="pisa-card">
+            <p className="menu-intro">
+              {language === 'th'
+                ? 'เลือกคำถามใดคำถามหนึ่งจากบทนี้เพื่อเริ่มทำและฝึกฝน'
+                : 'Choose a question from this unit to begin.'}
+            </p>
+            <div className="menu-grid">
+              {activeUnit.questions.map((question, index) => renderQuestionCard(question, index))}
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="reading-page">
       <div className="reading-shell">
@@ -263,8 +381,8 @@ export const PisaReadingPage: React.FC = () => {
             <h1 className="pisa-title">{language === 'th' ? 'แบบฝึกอ่านแบบ PISA' : 'PISA Reading Practice'}</h1>
             <p className="pisa-description">
               {language === 'th'
-                ? 'เลือกบทอ่านและคำถามที่ต้องการฝึกด้วยตัวเองในสไตล์เดียวกับแบบทดสอบอ่านที่เป็นมิตรและชัดเจน'
-                : 'Choose the passage and questions you want to practice in a clean, menu-style PISA reading experience.'}
+                ? 'เลือกบทอ่านที่ต้องการทำก่อน 1 บท หรือกดทำข้อสอบทั้งหมดย้อนดูเดียว'
+                : 'Pick a reading unit to start with, or choose any unit from the menu.'}
             </p>
           </div>
           <div className="pisa-actions">
@@ -277,15 +395,12 @@ export const PisaReadingPage: React.FC = () => {
         <section className="pisa-card">
           <p className="menu-intro">
             {language === 'th'
-              ? 'เลือกบทอ่านที่ต้องการทำก่อน 1 บท หรือกดทำข้อสอบทั้งหมดย้อนดูเดียว'
-              : 'Pick the reading task you want to work on first, or open any question from the list below.'}
+              ? 'หน้ารายการบทอ่านนี้แสดงหน่วยอ่านทั้งหมดในรูปแบบเดียวกับตัวอย่าง PISA — ไม่ใช่คำถามย่อยเพียงชุดเดียว'
+              : 'This reading menu shows the full set of units from the PISA example, not just one passage with subquestions.'}
           </p>
           <div className="menu-grid">
-            {readingQuestions.map((question, index) => renderQuestionCard(question, index))}
+            {readingUnits.map((unit, index) => renderUnitCard(unit, index))}
           </div>
-          <button className="menu-allbtn" type="button" onClick={() => navigate(`/pisa/reading/question/${readingQuestions[0]?.id}`)}>
-            {language === 'th' ? 'เริ่มจากข้อแรก' : 'Start with the first task'}
-          </button>
         </section>
       </div>
     </div>
