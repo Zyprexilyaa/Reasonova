@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import './Auth.css';
@@ -7,12 +7,15 @@ import './Auth.css';
 export const LoginPage: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loginWithEmail, loginWithGoogle, loading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const redirectPath = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +28,7 @@ export const LoginPage: React.FC = () => {
       }
 
       await loginWithEmail(email, password);
-      navigate('/');
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
       setError(errorMessage);
@@ -40,7 +43,7 @@ export const LoginPage: React.FC = () => {
 
     try {
       await loginWithGoogle();
-      navigate('/');
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Google login failed';
       setError(errorMessage);
