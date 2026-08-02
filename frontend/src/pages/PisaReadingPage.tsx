@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { AnalysisDisplay } from '../components/AnalysisDisplay';
 import { analyzeStudentAnswer } from '../services/api';
@@ -14,6 +14,7 @@ type ReadingQuestion = {
   correctIndex?: number;
   answer?: string;
   rubric?: string;
+  scoringRubric?: string;
   meta?: string;
   difficulty?: string;
   subject?: string;
@@ -25,6 +26,7 @@ const readingQuestions = (readingContent.questions ?? []) as ReadingQuestion[];
 export const PisaReadingPage: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const { questionId } = useParams<{ questionId: string }>();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [selectedChoices, setSelectedChoices] = useState<Record<string, string>>({});
@@ -34,9 +36,10 @@ export const PisaReadingPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const figures = useMemo(() => readingContent.extractedImages ?? [], []);
+  const isQuestionView = Boolean(questionId && questionId.trim()) && location.pathname.startsWith('/pisa/reading/question/');
   const activeQuestion = useMemo(
-    () => readingQuestions.find((question) => question.id === questionId),
-    [questionId]
+    () => (isQuestionView ? readingQuestions.find((question) => question.id === questionId) : undefined),
+    [isQuestionView, questionId]
   );
 
   const handleOpenSubmit = async (question: ReadingQuestion) => {
@@ -49,19 +52,22 @@ export const PisaReadingPage: React.FC = () => {
     setError(null);
     setIsSubmitting((prev) => ({ ...prev, [question.id]: true }));
 
+    const scoringGuideline = question.scoringRubric || question.rubric || 'Use the passage and grading rubric as your basis for assessment.';
+    const propositionRubric = question.scoringRubric || question.rubric || undefined;
+
     try {
       const result = await analyzeStudentAnswer({
         transcription: answer,
         questionId: question.id,
         referenceAnswer: question.answer || 'Use evidence from the reading passage.',
-        scoringGuideline: question.rubric || 'Use the passage and grading rubric as your basis for assessment.',
+        scoringGuideline,
         studentId: 'pisa-reading-user',
         proposition: {
           questionType: 'open',
           sourceType: 'reading',
           title: readingContent.title,
           questionText: question.text,
-          rubric: question.rubric,
+          rubric: propositionRubric,
         },
         language: language as 'th' | 'en',
       });
@@ -97,23 +103,23 @@ export const PisaReadingPage: React.FC = () => {
 
   const renderQuestionCard = (question: ReadingQuestion, index: number) => {
     const isOpen = question.type === 'open';
+    const typeLabel = isOpen
+      ? language === 'th' ? 'เขียนตอบ (AI ตรวจ)' : 'Open response (AI checked)'
+      : language === 'th' ? 'เลือกตอบ' : 'Multiple choice';
+
     return (
-      <div key={question.id} style={{ border: '1px solid #e3ebf6', borderRadius: 16, padding: 18, background: '#fff' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
-          <div>
-            <div className="pisa-badge">{language === 'th' ? `คำถามที่ ${index + 1}` : `Task ${index + 1}`}</div>
-            <p style={{ fontWeight: 700, margin: '8px 0 4px' }}>{question.text}</p>
-            {question.meta && <p style={{ color: '#566d80', fontSize: 13, margin: 0 }}>{question.meta}</p>}
+      <div key={question.id} className="menu-card" onClick={() => navigate(`/pisa/reading/question/${question.id}`)}>
+        <div className="menu-thumb">{String(index + 1)}</div>
+        <div className="menu-body">
+          <h3 className="menu-title">{question.text}</h3>
+          <p className="menu-sub">{question.meta || typeLabel}</p>
+          <div className="menu-tags">
+            <span>{language === 'th' ? `ข้อ ${index + 1}` : `Task ${index + 1}`}</span>
+            <span>{typeLabel}</span>
+            {question.difficulty && <span>{question.difficulty}</span>}
           </div>
-          <button className="pisa-btn secondary" type="button" onClick={() => navigate(`/pisa/reading/question/${question.id}`)}>
-            {language === 'th' ? 'เริ่มทำ' : 'Start'}
-          </button>
         </div>
-        <div style={{ color: '#5e7383', fontSize: 14 }}>
-          {isOpen
-            ? (language === 'th' ? 'แบบเขียนตอบพร้อมระบบ AI ตรวจคำตอบ' : 'Open response with AI feedback')
-            : (language === 'th' ? 'แบบเลือกตอบพร้อมคำตอบที่ถูกต้อง' : 'Multiple-choice with instant feedback')}
-        </div>
+        <div className="menu-go">›</div>
       </div>
     );
   };
@@ -249,37 +255,37 @@ export const PisaReadingPage: React.FC = () => {
   }
 
   return (
-    <div className="pisa-assessment-page">
-      <div className="pisa-shell">
-        <section className="pisa-card pisa-hero">
+    <div className="reading-page">
+      <div className="reading-shell">
+        <section className="pisa-card reading-hero">
           <div>
             <div className="pisa-eyebrow">📖 Reading</div>
-            <h1 className="pisa-title">PISA Reading practice</h1>
+            <h1 className="pisa-title">{language === 'th' ? 'แบบฝึกอ่านแบบ PISA' : 'PISA Reading Practice'}</h1>
             <p className="pisa-description">
               {language === 'th'
-                ? 'เลือกคำถามอ่านแบบ PISA ที่ต้องการฝึกจากรายการด้านล่าง เพื่อเริ่มทำงานที่ถูกต้องตามลำดับ'
-                : 'Choose the PISA reading task you want to work on from the list below and start with the one that fits your learning goal.'}
+                ? 'เลือกบทอ่านและคำถามที่ต้องการฝึกด้วยตัวเองในสไตล์เดียวกับแบบทดสอบอ่านที่เป็นมิตรและชัดเจน'
+                : 'Choose the passage and questions you want to practice in a clean, menu-style PISA reading experience.'}
             </p>
           </div>
           <div className="pisa-actions">
-            <Link className="pisa-btn primary" to="/pisa">
+            <Link className="pisa-btn secondary" to="/pisa">
               {language === 'th' ? 'กลับสู่หน้าหลัก PISA' : 'Back to PISA home'}
             </Link>
           </div>
         </section>
 
         <section className="pisa-card">
-          <div className="pisa-question-box">
-            <h3>{language === 'th' ? 'เลือกคำถามที่ต้องการฝึก' : 'Choose a reading task'}</h3>
-            <p style={{ color: '#4d6075', marginBottom: 12 }}>
-              {language === 'th'
-                ? 'นักเรียนสามารถคลิกคำถามแต่ละข้อเพื่อเปิดหน้าทำข้อสอบและรับคำตอบจากระบบ AI'
-                : 'Students can click any task to open the practice view and receive AI-supported feedback.'}
-            </p>
-            <div style={{ display: 'grid', gap: 16 }}>
-              {readingQuestions.map((question, index) => renderQuestionCard(question, index))}
-            </div>
+          <p className="menu-intro">
+            {language === 'th'
+              ? 'เลือกบทอ่านที่ต้องการทำก่อน 1 บท หรือกดทำข้อสอบทั้งหมดย้อนดูเดียว'
+              : 'Pick the reading task you want to work on first, or open any question from the list below.'}
+          </p>
+          <div className="menu-grid">
+            {readingQuestions.map((question, index) => renderQuestionCard(question, index))}
           </div>
+          <button className="menu-allbtn" type="button" onClick={() => navigate(`/pisa/reading/question/${readingQuestions[0]?.id}`)}>
+            {language === 'th' ? 'เริ่มจากข้อแรก' : 'Start with the first task'}
+          </button>
         </section>
       </div>
     </div>
