@@ -35,9 +35,9 @@ const SUBJECTS: SubjectCard[] = [
   {
     key: 'reading',
     title: 'Reading',
-    description: 'Reading comprehension and text interpretation tasks will be added here soon.',
-    badge: 'Coming soon',
-    ready: false,
+    description: 'Reading comprehension with a PISA-style passage and AI-assisted written response scoring.',
+    badge: 'Ready',
+    ready: true,
     path: '/pisa/reading',
   },
   {

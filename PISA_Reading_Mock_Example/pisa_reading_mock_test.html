@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PISA Mock Test - การอ่าน</title>
+<style>
+  :root{
+    --navy:#0f2a4a;
+    --navy2:#173d68;
+    --gold:#c99a3a;
+    --bg:#f4f1ea;
+    --card:#ffffff;
+    --ink:#1c2530;
+    --muted:#6b7280;
+    --green:#1d7a4c;
+    --green-bg:#e7f5ec;
+    --red:#b3392c;
+    --red-bg:#fbeae7;
+    --ai:#5b3ea6;
+    --ai-bg:#efe9fb;
+    --line:#e4dfd2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:"Noto Sans Thai","Sarabun","Segoe UI",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65;
+  }
+  header.top{
+    background:linear-gradient(135deg,var(--navy),var(--navy2));
+    color:#fff; padding:28px 24px; text-align:center;
+    box-shadow:0 3px 10px rgba(0,0,0,.15);
+  }
+  header.top h1{margin:0 0 6px; font-size:1.5rem; letter-spacing:.3px;}
+  header.top p{margin:0; opacity:.85; font-size:.9rem;}
+  .wrap{max-width:860px; margin:0 auto; padding:24px 16px 80px;}
+
+  /* Nav / progress */
+  .progressbar{
+    display:flex; gap:6px; margin:20px 0 28px; flex-wrap:wrap;
+  }
+  .progressbar .seg{
+    flex:1; min-width:24px; height:8px; border-radius:4px; background:#ddd6c5;
+    transition:.2s;
+  }
+  .progressbar .seg.done{background:var(--green);}
+  .progressbar .seg.current{background:var(--gold);}
+
+  .unit-card{
+    background:var(--card); border-radius:14px; padding:26px 26px 10px;
+    box-shadow:0 2px 10px rgba(15,42,74,.08); margin-bottom:22px;
+    border:1px solid var(--line);
+  }
+  .unit-tag{
+    display:inline-block; background:var(--navy); color:#fff; font-size:.72rem;
+    padding:3px 10px; border-radius:20px; letter-spacing:.5px; margin-bottom:10px;
+  }
+  .passage-title{font-size:1.25rem; font-weight:700; color:var(--navy); margin:0 0 12px;}
+  .passage-body{
+    background:#fbfaf6; border:1px solid var(--line); border-radius:10px;
+    padding:18px 20px; margin-bottom:6px; white-space:pre-line; font-size:.98rem;
+  }
+  .passage-body img{max-width:100%; border-radius:6px;}
+  .passage-note{font-size:.78rem; color:var(--muted); margin:8px 0 20px;}
+
+  .q-block{
+    border-top:1px dashed var(--line); padding:22px 0;
+  }
+  .q-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .q-num{font-weight:700; color:var(--navy2); font-size:1rem;}
+  .badge{
+    font-size:.68rem; font-weight:700; padding:3px 9px; border-radius:20px;
+    letter-spacing:.3px; white-space:nowrap;
+  }
+  .badge.auto{background:var(--green-bg); color:var(--green);}
+  .badge.ai{background:var(--ai-bg); color:var(--ai);}
+  .q-text{font-size:1rem; margin-bottom:14px; font-weight:600;}
+
+  .choices label{
+    display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
+    border:1px solid var(--line); border-radius:9px; margin-bottom:8px;
+    cursor:pointer; transition:.15s; background:#fff;
+  }
+  .choices label:hover{border-color:var(--gold);}
+  .choices input{margin-top:3px;}
+  .choices label.picked{border-color:var(--navy2); background:#eef3f9;}
+  .choices label.correct{border-color:var(--green); background:var(--green-bg);}
+  .choices label.wrong{border-color:var(--red); background:var(--red-bg);}
+
+  textarea.open-answer{
+    width:100%; min-height:110px; border:1px solid var(--line); border-radius:9px;
+    padding:12px 14px; font-family:inherit; font-size:.95rem; resize:vertical;
+  }
+  textarea.open-answer:focus{outline:2px solid var(--gold); border-color:transparent;}
+
+  .ai-hook{
+    margin-top:14px; border:1.5px dashed var(--ai); background:var(--ai-bg);
+    border-radius:10px; padding:12px 14px; font-size:.82rem; color:#43306e;
+  }
+  .ai-hook code{
+    background:#fff; border:1px solid #d9cdf0; border-radius:4px; padding:1px 6px;
+    font-size:.78rem;
+  }
+  .ai-status{
+    margin-top:8px; font-size:.8rem; font-weight:700;
+  }
+  .ai-status.pending{color:var(--ai);}
+  .ai-status.scored{color:var(--green);}
+
+  details.rubric{margin-top:10px; font-size:.83rem;}
+  details.rubric summary{cursor:pointer; color:var(--ai); font-weight:600;}
+  details.rubric .rubric-body{
+    background:#fbfaf6; border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; margin-top:8px; white-space:pre-line;
+  }
+
+  .feedback{margin-top:10px; font-size:.85rem; font-weight:600;}
+  .feedback.ok{color:var(--green);}
+  .feedback.no{color:var(--red);}
+
+  .check-btn, .nav-btn, .submit-btn{
+    background:var(--navy); color:#fff; border:none; padding:10px 20px;
+    border-radius:8px; font-size:.9rem; cursor:pointer; font-weight:600;
+    transition:.15s;
+  }
+  .check-btn:hover, .nav-btn:hover, .submit-btn:hover{background:var(--navy2);}
+  .submit-btn{background:var(--gold); color:#3a2c05; margin-top:6px;}
+  .submit-btn:hover{background:#b8872e;}
+
+  .stats-box{
+    background:var(--card); border-radius:14px; padding:24px; margin-top:10px;
+    border:1px solid var(--line);
+  }
+  .stat-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:.92rem;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-num{font-weight:700; color:var(--navy);}
+
+  .foot-note{
+    text-align:center; font-size:.75rem; color:var(--muted); margin-top:36px;
+  }
+  .pending-pill{
+    display:inline-flex; align-items:center; gap:6px; background:var(--ai-bg);
+    color:var(--ai); border:1px solid #d9cdf0; padding:6px 12px; border-radius:20px;
+    font-size:.8rem; font-weight:700; margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>📖 PISA Mock Test — การอ่าน</h1>
+  <p>สร้างจากไฟล์ตัวอย่างข้อสอบ PISA การอ่าน (สสวท.) · ข้อสอบเลือกตอบให้คะแนนอัตโนมัติ · ข้อสอบเขียนตอบให้คะแนนด้วย AI</p>
+</header>
+
+<div class="wrap">
+
+  <div class="pending-pill" id="aiPendingPill">🤖 ระบบนี้เตรียม "จุดเชื่อม AI API" ไว้สำหรับข้อสร้างคำตอบอิสระ — ดูรายละเอียดที่ท้ายหน้า</div>
+
+  <div class="progressbar" id="progressBar"></div>
+
+  <div id="testArea"></div>
+
+  <div class="unit-card" id="resultCard" style="display:none;">
+    <h2 style="color:var(--navy); margin-top:0;">📊 สรุปผลคะแนน</h2>
+    <div class="stats-box">
+      <div class="stat-row"><span>ข้อเลือกตอบ (ให้คะแนนอัตโนมัติ)</span><span class="stat-num" id="autoScore">-</span></div>
+      <div class="stat-row"><span>ข้อสร้างคำตอบอิสระ (รอ AI / ครูตรวจ)</span><span class="stat-num" id="aiPendingCount">-</span></div>
+      <div class="stat-row"><span>คะแนนรวมที่ตรวจแล้ว</span><span class="stat-num" id="totalScored">-</span></div>
+    </div>
+    <p style="font-size:.85rem; color:var(--muted); margin-top:14px;">
+      ข้อที่มีป้าย <span class="badge ai">🤖 AI ตรวจ</span> จะยังไม่ถูกนับคะแนนจนกว่าจะเชื่อมต่อ AI API ของคุณ (ดูคำอธิบายด้านล่าง)
+    </p>
+  </div>
+
+  <div class="foot-note">
+    <strong>หมายเหตุ:</strong> เนื้อหาชุดนี้คัดมาจากไฟล์ที่อัปโหลด (2 บทอ่านเต็ม: "ทะเลสาบชาด" และ "ไข้หวัด")<br>
+    เอกสารต้นฉบับมีบทอ่านอีกจำนวนมาก (เช่น การบริจาคโลหิต, รถไฟใต้ดิน ฯลฯ) — เพิ่มลงใน <code>UNITS</code> array ด้านล่างของโค้ดได้ในรูปแบบเดียวกัน
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   DATA MODEL
+   - type: "mc"  -> multiple choice, auto-graded client-side
+   - type: "open" -> constructed response, REQUIRES AI/human grading
+     -> these are flagged with needsAI: true and include the
+        official scoring rubric (extracted from the source PDF)
+        so an AI grader (or a teacher) has the criteria to score against.
+   ============================================================ */
+
+const UNITS = [
+  {
+    id: "lakechad",
+    title: "ทะเลสาบชาด (Lake Chad)",
+    passage:
+`รูปที่ 1 แสดงการเปลี่ยนแปลงระดับน้ำของทะเลสาบชาด ในซาฮารา แอฟริกาเหนือ ทะเลสาบชาดสูญหายไร้ร่องรอย
+ประมาณ 20,000 ปีก่อนคริสตศักราช (20,000 BC) ช่วงปลายยุคน้ำแข็ง และประมาณ 11,000 ปีก่อนคริสตศักราช
+(11,000 BC) ทะเลสาบนี้ปรากฏขึ้นมาอีกครั้ง ปัจจุบันระดับน้ำของทะเลสาบมีระดับเดียวกับเมื่อปี ค.ศ. 1000 (AD 1000)
+
+[รูปที่ 1: กราฟแสดงระดับความลึกของทะเลสาบชาด ตั้งแต่ 8000 BC ถึง AD 1000]
+
+รูปที่ 2 แสดงถึงศิลปะบนหินแห่งซาฮารา (ภาพเขียนโบราณ หรือภาพวาดบนฝาผนังถ้ำ) และการเปลี่ยนแปลงของชีวิตสัตว์ป่า
+เช่น นกกระจอกเทศ ยีราฟ แรด ฮิปโปโปเตมัส วัวป่า ที่ปรากฏหรือหายไปในแต่ละช่วงเวลา ตั้งแต่ 8000 BC ถึง AD 1000
+
+[รูปที่ 2: แผนภาพศิลปะหินแห่งซาฮาราและช่วงเวลาที่พบสัตว์แต่ละชนิด]`,
+    passageNote: "* ข้อความและกราฟถอดความจากหน้า 13–17 ของไฟล์ต้นฉบับ (แผนภูมิ/กราฟย่อเนื้อหาให้อยู่ในรูปคำอธิบาย)",
+    questions: [
+      {
+        type: "mc",
+        code: "LAKECHAD-Q1",
+        text: "คำถามที่ 1: ปัจจุบันทะเลสาบชาดลึกเท่าไร",
+        options: [
+          "ประมาณ 2 เมตร",
+          "ประมาณ 15 เมตร",
+          "ประมาณ 50 เมตร",
+          "สาบสูญไปแล้ว",
+          "ข้อมูลไม่ได้ระบุ"
+        ],
+        correctIndex: 1,
+        meta: "สมรรถนะ: ค้นสาระ · ชนิดบทความ: แผนภูมิและกราฟ · แบบข้อสอบ: เลือกตอบ"
+      },
+      {
+        type: "open",
+        code: "LAKECHAD-Q2",
+        text: "คำถามที่ 2: ประมาณปีใดที่กราฟในรูปที่ 1 เริ่มต้น?",
+        meta: "สมรรถนะ: ค้นสาระ · แบบข้อสอบ: สร้างคำตอบอิสระ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 15]
+ได้คะแนนเต็ม: ตอบว่า 11,000 ปีก่อนคริสตศักราช (หรือค่าประมาณในช่วง 10,500–12,000 BC ที่อ่านจากมาตราส่วนของกราฟได้อย่างสมเหตุสมผล)
+ไม่ได้คะแนน: คำตอบอื่น ๆ เช่น 10,000 BC / 20,000 BC / 8000 BC (อ่านค่าผิดตำแหน่ง) หรือชี้ลูกศรที่จุดเริ่มต้นของกราฟโดยไม่ระบุตัวเลข`
+      },
+      {
+        type: "open",
+        code: "LAKECHAD-Q3",
+        text: "คำถามที่ 3: ทำไมผู้เขียนจึงเลือกที่จะเริ่มต้นกราฟ ณ จุดนี้?",
+        meta: "สมรรถนะ: วิเคราะห์ · แบบข้อสอบ: สร้างคำตอบอิสระ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 16]
+ได้คะแนนเต็ม: คำตอบอ้างถึง "การปรากฏขึ้นใหม่ของทะเลสาบ" หลังจากที่เคยสาบสูญไป เช่น
+  • "ทะเลสาบชาดปรากฏขึ้นใหม่ในปี 11,000 ก่อนคริสตกาล หลังจากที่หายสาบสูญไปในช่วงยุคน้ำแข็ง"
+  • "เพราะเป็นจุดที่ทะเลสาบกลับมาปรากฏอีกครั้งหลังจากหายไป"
+  (คำตอบอาจได้คะแนนแม้คำตอบข้อ 2 จะผิด หากตรรกะของคำอธิบายถูกต้อง)
+ไม่ได้คะแนน: คำตอบที่ไม่เชื่อมโยงกับการปรากฏขึ้นใหม่ของทะเลสาบ เช่น "เพราะเป็นจุดเริ่มต้นของกราฟ" หรือ "เพราะทะเลสาบแห้งสนิทในช่วงนั้น"`
+      },
+      {
+        type: "mc",
+        code: "LAKECHAD-Q4",
+        text: "คำถามที่ 4: รูปที่ 2 ตั้งอยู่บนพื้นฐานที่ถือว่า...",
+        options: [
+          "สัตว์ต่าง ๆ ในศิลปะบนหิน คือสัตว์ที่มีอยู่ในพื้นที่นั้น ในเวลาที่มีการวาดภาพนั้น ๆ",
+          "ศิลปินที่วาดสัตว์มีทักษะสูงมาก",
+          "ศิลปินที่วาดรูปสัตว์เป็นผู้เดินทางท่องเที่ยวไปได้ในโลกกว้างอย่างทั่วถึง",
+          "ไม่ได้มีความพยายามที่จะนำสัตว์ที่วาดในภาพเหล่านั้นมาเป็นสัตว์เลี้ยง"
+        ],
+        correctIndex: 0,
+        meta: "สมรรถนะ: ตีความ · แบบข้อสอบ: เลือกตอบ"
+      },
+      {
+        type: "mc",
+        code: "LAKECHAD-Q5",
+        text: "คำถามที่ 5: (ให้นำข้อมูลจากรูปที่ 1 และรูปที่ 2 มารวมกันเพื่อตอบคำถามนี้) การสาบสูญของแรด ฮิปโปโปเตมัสและวัวป่าในภาพศิลปะบนหินแห่งซาฮารา เกิดขึ้นเมื่อใด",
+        options: [
+          "ตอนเริ่มต้นของยุคน้ำแข็งซึ่งใกล้กับยุคปัจจุบันที่สุด",
+          "ช่วงกลางของยุคที่ทะเลสาบชาดมีระดับสูงสุด",
+          "หลังจากระดับของทะเลสาบชาดต่ำลงมานานกว่าพันปี",
+          "เมื่อตอนต้นของช่วงเวลาที่ทะเลสาบแห้งไป"
+        ],
+        correctIndex: 2,
+        meta: "สมรรถนะ: ตีความ · แบบข้อสอบ: เลือกตอบ",
+        answerNote: "* คำตอบข้อนี้อ่านจากตารางเปรียบเทียบกราฟในเอกสารต้นฉบับ ซึ่งบางส่วนไม่ชัดเจนจากการสแกน แนะนำให้ตรวจทานกับต้นฉบับหน้า 17 อีกครั้งก่อนใช้จริง"
+      }
+    ]
+  },
+  {
+    id: "flu",
+    title: "ไข้หวัด (โครงการฉีดวัคซีนของบริษัททองไท)",
+    passage:
+`โครงการให้พนักงานสมัครใจสร้างภูมิคุ้มกันไข้หวัด ของบริษัททองไท
+
+เราทราบกันดีว่า ไข้หวัดติดต่อได้ง่าย และรุนแรงในฤดูหนาว ทำให้ผู้ป่วยหายยาก วิธีที่ดีที่สุดในการต้านไวรัส
+ไข้หวัด คือ ทำให้ร่างกายแข็งแรงและมีสุขภาพดี การออกกำลังกายทุกวัน และการกินอาหารที่มีประโยชน์ที่มีผัก
+และผลไม้มาก ๆ จะช่วยให้ระบบภูมิคุ้มกันในร่างกายสามารถต่อสู้และป้องกันการคุกคามของไวรัสชนิดนี้ได้
+
+ทองไทตัดสินใจเปิดโอกาสให้พนักงานทุกคนได้รับภูมิคุ้มกัน เพื่อเป็นอีกวิธีหนึ่งที่ใช้ป้องกันการแพร่กระจายของ
+เชื้อไวรัสระหว่างบุคคล ทองไทจัดพยาบาลมาฉีดวัคซีนให้ที่บริษัทในช่วงครึ่งวันของเวลาทำการ ของสัปดาห์ที่เริ่มจาก
+วันที่ 17 พฤษภาคม โครงการนี้เป็นบริการฟรีแก่พนักงานทุกคน
+
+โครงการนี้เป็นโครงการตามความสมัครใจ พนักงานที่เข้าร่วมโครงการต้องลงชื่อแสดงความยินยอม เพื่อแสดงว่า
+ไม่เป็นภูมิแพ้ และแจ้งให้ทราบว่าการฉีดวัคซีนครั้งนี้อาจเกิดผลข้างเคียงบ้างเล็กน้อย
+
+คำแนะนำทางการแพทย์ระบุว่า การให้ภูมิคุ้มกันนี้ไม่ทำให้เป็นไข้หวัดใหญ่ อย่างไรก็ตาม อาจเกิดผลข้างเคียงบ้าง
+เช่น เมื่อยล้า มีไข้เล็กน้อย และแขนไม่มีกำลัง
+
+ใครควรได้รับภูมิคุ้มกัน?
+ผู้ที่สนใจป้องกันตนเองจากเชื้อไวรัส โดยเฉพาะผู้สูงอายุที่มีอายุมากกว่า 65 ปีขึ้นไป แนะนำให้สร้างภูมิคุ้มกัน
+ยกเว้นผู้ใดก็ตามที่เป็นโรคเรื้อรังที่ทำให้สุขภาพอ่อนแอ โดยเฉพาะอย่างยิ่งคนที่เป็นโรคหัวใจ หลอดลมอักเสบ
+หรือเบาหวาน ไม่ว่าอายุเท่าใด ในสภาพแวดล้อมของที่ทำงาน ทุกคนเสี่ยงต่อการติดเชื้อหวัด
+
+ใครไม่ควรได้รับภูมิคุ้มกัน?
+ผู้ที่แพ้อาหารประเภทไข่ คนที่เป็นไข้ตัวร้อนเฉียบพลัน และสตรีมีครรภ์ โปรดปรึกษาแพทย์ หากท่านกำลังอยู่
+ในระหว่างการบำบัดด้วยยาใด ๆ หรือเคยมีปฏิกิริยาต่อการฉีดยาแก้หวัดมาก่อน
+
+ถ้าท่านต้องการได้รับภูมิคุ้มกันในสัปดาห์ที่เริ่มจากวันที่ 17 พฤษภาคม โปรดแจ้งฝ่ายบุคคล ที่คุณวีนัส รื่นรมย์
+ภายในวันศุกร์ที่ 7 พฤษภาคม การนัดวันเวลาจะทำตามช่วงที่พยาบาลว่าง จำนวนคนที่ต้องการรับภูมิคุ้มกัน และ
+เวลาที่พนักงานส่วนใหญ่สะดวก ถ้าท่านต้องการทราบรายละเอียดเพิ่มเติม โปรดติดต่อคุณวีนัส ต่อ 5577
+
+(วีนัส รื่นรมย์ เจ้าหน้าที่ฝ่ายบุคคลของบริษัททองไท เตรียมใบปลิวข้อมูล 2 หน้าดังกล่าว สำหรับพนักงานบริษัท)`,
+    passageNote: "* ถอดความจากหน้า 18 ของไฟล์ต้นฉบับ",
+    questions: [
+      {
+        type: "mc",
+        code: "FLU-Q1",
+        text: "คำถามที่ 1: ข้อใดต่อไปนี้กล่าวถึงวิธีการของโครงการสร้างภูมิคุ้มกันไข้หวัดของบริษัททองไท",
+        options: [
+          "จะมีการจัดการออกกำลังกายอย่างสม่ำเสมอในช่วงฤดูฝนนี้",
+          "จะมีการฉีดวัคซีนให้ในช่วงเวลาทำงาน",
+          "ผู้เข้าร่วมโครงการจะได้รับรางวัลเป็นการตอบแทน",
+          "แพทย์จะเป็นผู้ดำเนินการฉีดวัคซีนด้วยตนเอง"
+        ],
+        correctIndex: 1,
+        meta: "สมรรถนะ: ค้นสาระ · ชนิดบทความ: การโต้แย้งหรือชักจูง · สถานการณ์: ในเชิงอาชีพ · แบบข้อสอบ: เลือกตอบ"
+      },
+      {
+        type: "open",
+        code: "FLU-Q2",
+        text: "คำถามที่ 2: คุณวีนัสต้องการให้รูปแบบของเอกสารดูเป็นกันเอง ในขณะเดียวกันก็ต้องการเชิญชวนพนักงานด้วย ท่านคิดว่าเธอประสบความสำเร็จหรือไม่? จงอธิบาย โดยอ้างถึงรายละเอียดของการจัดวางข้อความ วิธีการเขียน การวางภาพ หรือลายเส้นต่าง ๆ",
+        meta: "สมรรถนะ: วิเคราะห์ · แบบข้อสอบ: สร้างคำตอบอิสระ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 20–21]
+ได้คะแนนเต็ม: อ้างเนื้อหาอย่างถูกต้อง และโยงรูปแบบการเขียนเข้ากับวัตถุประสงค์ ให้สอดคล้องกับความหมายของ
+"เป็นกันเองและชักชวนส่งเสริม" ต้องมีอย่างน้อย 1 อย่างต่อไปนี้:
+  (1) อ้างลักษณะสำคัญของเนื้อหาในรายละเอียด (การวางรูปแบบ วิธีการเขียน ภาพ ฯลฯ) พร้อมบอกคุณภาพของรูปแบบนั้น
+  (2) ใช้คำประเมินคุณค่าที่เฉพาะเจาะจงกว่าคำว่า "เป็นกันเอง"/"ชักชวนส่งเสริม" เฉย ๆ (เช่น "ดูอบอุ่น" "ดูเป็นเด็กเกินไป")
+  ตัวอย่างคำตอบเต็มคะแนน: "สำเร็จ ใช้รูปภาพคั่นเนื้อหาช่วยให้ง่ายต่อการอ่าน" / "ภาพไวรัสที่คล้ายการ์ตูนดูเป็นกันเอง"
+ได้คะแนนบางส่วน: อ้างเนื้อหาถูกต้องแต่โยงกับสาระของเรื่องมากกว่ารูปแบบการเขียน และยังบอกความเห็นได้ว่าสำเร็จหรือไม่
+ไม่ได้คะแนน: คำตอบที่ไม่เจาะจง คลุมเครือ ไม่อ้างอิงรายละเอียดของการจัดวาง/รูปแบบการเขียน เช่น "ใช่ อ่านง่ายและชัดเจน" (คำกว้างเกินไป)
+  หรือคำตอบที่ไม่เกี่ยวข้อง/ไม่สมเหตุสมผล เช่น "ใช่ เพราะทุกคนควรได้รับการฉีด"`
+      },
+      {
+        type: "mc",
+        code: "FLU-Q3",
+        text: "คำถามที่ 3: ใบปลิวนี้ชี้ให้เห็นว่า ถ้าท่านต้องการป้องกันตัวเองจากไวรัสไข้หวัด การฉีดภูมิคุ้มกันไข้หวัดนั้นเป็นจริงในข้อใด",
+        options: [
+          "ได้ผลดีกว่าการออกกำลังกายและการกินอาหารที่มีประโยชน์ แต่มีความเสี่ยงสูงกว่า",
+          "เป็นความคิดที่ดี แต่ไม่ใช่การแทนการออกกำลังกายและการกินอาหารที่มีประโยชน์",
+          "ได้ผลเช่นเดียวกับการออกกำลังกายและการกินอาหารที่มีประโยชน์ และมีความยุ่งยากน้อยกว่า",
+          "ไม่คุ้มค่า ถ้าท่านออกกำลังกายเป็นประจำอยู่แล้วและกินอาหารที่มีประโยชน์"
+        ],
+        correctIndex: 1,
+        meta: "สมรรถนะ: ตีความ · สถานการณ์: ในเชิงอาชีพ · แบบข้อสอบ: เลือกตอบ"
+      },
+      {
+        type: "open",
+        code: "FLU-Q4",
+        text: "คำถามที่ 4: ส่วนหนึ่งของใบปลิวกล่าวว่า \"ใครควรได้รับการฉีดวัคซีน? ผู้ที่สนใจป้องกันตนเองจากเชื้อไวรัส\" เพื่อนร่วมงานบอกคุณวีนัสว่าควรตัดข้อความนี้ออก เพราะอาจทำให้เข้าใจผิด — นักเรียนเห็นด้วยหรือไม่ เพราะเหตุใด จงให้เหตุผลอธิบายคำตอบของท่าน",
+        meta: "สมรรถนะ: วิเคราะห์ · สถานการณ์: ในเชิงอาชีพ · แบบข้อสอบ: สร้างคำตอบอิสระ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 22]
+ได้คะแนนเต็ม (เส้นทางที่ 1): ประเมินคำว่า "เข้าใจผิด" โดยชี้ว่าข้อความอาจขัดแย้งกับส่วนอื่นของใบปลิว (เช่น
+  "ใครควรได้รับภูมิคุ้มกัน = ใครก็ได้" ขัดกับ "ใครไม่ควรได้รับภูมิคุ้มกัน" ที่ระบุไว้ในย่อหน้าถัดมา) เช่น
+  "เห็นด้วย เพราะมันอาจเป็นอันตรายสำหรับบางคนที่จะรับภูมิคุ้มกัน (เช่น หญิงมีครรภ์)"
+ได้คะแนนเต็ม (เส้นทางที่ 2): ประเมินคำว่า "เข้าใจผิด" โดยชี้ว่าข้อความกล่าวเกินจริง (เช่น การฉีดวัคซีนไม่ได้
+  ป้องกันได้ 100%) เช่น "ฉันไม่เห็นด้วย เพราะการฉีดวัคซีนไม่ได้ป้องกันอย่างสมบูรณ์"
+ไม่ได้คะแนน: แสดงความเข้าใจเนื้อเรื่องไม่ถูกต้อง หรือให้คำตอบที่ไม่เป็นเหตุเป็นผล/ไม่เกี่ยวข้อง เช่น
+  "เห็นด้วย เพราะทุกคนควรได้รับการฉีด" หรือ "ไม่เห็นด้วย เพราะรูปภาพไม่เกี่ยวกับข่าวสาร"`
+      }
+    ]
+  }
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  answers: {},     // code -> selected index (mc) or text (open)
+  checkedMC: {},    // code -> true once "ตรวจคำตอบ" clicked
+  aiResult: {}       // code -> { score, feedback } once AI grading has been run
+};
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const testArea = document.getElementById('testArea');
+
+function renderAll(){
+  testArea.innerHTML = '';
+  UNITS.forEach(unit => testArea.appendChild(renderUnit(unit)));
+
+  const submitWrap = document.createElement('div');
+  submitWrap.style.textAlign = 'center';
+  submitWrap.style.margin = '30px 0';
+  const btn = document.createElement('button');
+  btn.className = 'submit-btn';
+  btn.textContent = 'ส่งคำตอบทั้งหมด และดูสรุปผล';
+  btn.onclick = submitAll;
+  submitWrap.appendChild(btn);
+  testArea.appendChild(submitWrap);
+
+  renderProgress();
+}
+
+function renderProgress(){
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = '';
+  const allQ = UNITS.flatMap(u => u.questions);
+  allQ.forEach(q => {
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    const answered = q.type === 'mc'
+      ? state.answers[q.code] !== undefined
+      : (state.answers[q.code] || '').trim().length > 0;
+    if(answered) seg.classList.add('done');
+    bar.appendChild(seg);
+  });
+}
+
+function renderUnit(unit){
+  const card = document.createElement('div');
+  card.className = 'unit-card';
+
+  card.innerHTML = `
+    <span class="unit-tag">บทอ่าน</span>
+    <div class="passage-title">${unit.title}</div>
+    <div class="passage-body">${escapeHtml(unit.passage)}</div>
+    <div class="passage-note">${unit.passageNote || ''}</div>
+  `;
+
+  unit.questions.forEach(q => card.appendChild(renderQuestion(q)));
+  return card;
+}
+
+function renderQuestion(q){
+  const block = document.createElement('div');
+  block.className = 'q-block';
+
+  const head = document.createElement('div');
+  head.className = 'q-head';
+  head.innerHTML = `
+    <div class="q-num">${q.code}</div>
+    ${q.type === 'mc'
+      ? `<span class="badge auto">✅ ตรวจอัตโนมัติ</span>`
+      : `<span class="badge ai">🤖 AI ตรวจ</span>`}
+  `;
+  block.appendChild(head);
+
+  const textEl = document.createElement('div');
+  textEl.className = 'q-text';
+  textEl.textContent = q.text;
+  block.appendChild(textEl);
+
+  if(q.type === 'mc'){
+    block.appendChild(renderMC(q));
+  } else {
+    block.appendChild(renderOpen(q));
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'passage-note';
+  meta.textContent = q.meta || '';
+  block.appendChild(meta);
+
+  if(q.answerNote){
+    const note = document.createElement('div');
+    note.className = 'passage-note';
+    note.style.color = 'var(--red)';
+    note.textContent = q.answerNote;
+    block.appendChild(note);
+  }
+
+  return block;
+}
+
+function renderMC(q){
+  const wrap = document.createElement('div');
+  wrap.className = 'choices';
+
+  q.options.forEach((opt, idx) => {
+    const label = document.createElement('label');
+    label.innerHTML = `
+      <input type="radio" name="${q.code}" value="${idx}">
+      <span>${escapeHtml(opt)}</span>
+    `;
+    label.querySelector('input').addEventListener('change', () => {
+      state.answers[q.code] = idx;
+      wrap.querySelectorAll('label').forEach(l => l.classList.remove('picked'));
+      label.classList.add('picked');
+      renderProgress();
+    });
+    wrap.appendChild(label);
+  });
+
+  const btnRow = document.createElement('div');
+  btnRow.style.marginTop = '10px';
+  const checkBtn = document.createElement('button');
+  checkBtn.className = 'check-btn';
+  checkBtn.textContent = 'ตรวจคำตอบข้อนี้';
+  const feedback = document.createElement('div');
+  feedback.className = 'feedback';
+
+  checkBtn.onclick = () => {
+    const chosen = state.answers[q.code];
+    if(chosen === undefined){
+      feedback.textContent = 'กรุณาเลือกคำตอบก่อน';
+      feedback.className = 'feedback no';
+      return;
+    }
+    state.checkedMC[q.code] = true;
+    wrap.querySelectorAll('label').forEach((l, idx) => {
+      l.classList.remove('picked');
+      if(idx === q.correctIndex) l.classList.add('correct');
+      else if(idx === chosen) l.classList.add('wrong');
+    });
+    if(chosen === q.correctIndex){
+      feedback.textContent = '✅ ถูกต้อง!';
+      feedback.className = 'feedback ok';
+    } else {
+      feedback.textContent = `❌ ยังไม่ถูก — คำตอบที่ถูกคือ "${q.options[q.correctIndex]}"`;
+      feedback.className = 'feedback no';
+    }
+  };
+
+  btnRow.appendChild(checkBtn);
+  wrap.appendChild(btnRow);
+  wrap.appendChild(feedback);
+  return wrap;
+}
+
+function renderOpen(q){
+  const wrap = document.createElement('div');
+
+  const ta = document.createElement('textarea');
+  ta.className = 'open-answer';
+  ta.placeholder = 'พิมพ์คำตอบของนักเรียนที่นี่...';
+  ta.addEventListener('input', () => {
+    state.answers[q.code] = ta.value;
+    renderProgress();
+  });
+  wrap.appendChild(ta);
+
+  // Rubric (visible so a human grader — or the AI prompt you build — has the criteria)
+  const details = document.createElement('details');
+  details.className = 'rubric';
+  details.innerHTML = `
+    <summary>ดูเกณฑ์การให้คะแนน (สำหรับครู / สำหรับส่งเข้า AI grading)</summary>
+    <div class="rubric-body">${escapeHtml(q.rubric || 'ไม่มีเกณฑ์แนบมาในข้อนี้')}</div>
+  `;
+  wrap.appendChild(details);
+
+  /* ============================================================
+     🤖 AI GRADING HOOK
+     -------------------------------------------------------------
+     This is the integration point mentioned by the user:
+     "เดี๋ยวให้ดึง AI API มาใช้ ... ให้ประมวลผลตรงนี้"
+
+     Replace the body of gradeWithAI() below with a real call into
+     your own AI grading system. It receives:
+       - questionCode : string   (e.g. "LAKECHAD-Q3")
+       - questionText : string   (the prompt shown to the student)
+       - studentAnswer: string   (whatever the student typed)
+       - rubric       : string   (official scoring rubric, extracted
+                                   from the source PDF, shown above)
+     It should resolve to: { score: number, maxScore: number, feedback: string }
+
+     Suggested prompt shape for your AI system:
+       "You are grading a PISA reading constructed-response item.
+        Question: {questionText}
+        Official scoring rubric: {rubric}
+        Student answer: {studentAnswer}
+        Return JSON: {score, maxScore, feedback}"
+     ============================================================ */
+  const hook = document.createElement('div');
+  hook.className = 'ai-hook';
+  hook.innerHTML = `
+    🤖 <strong>ข้อนี้ต้องให้ AI ตรวจ</strong><br>
+    เมื่อเชื่อมระบบ AI ของคุณแล้ว เรียกใช้ฟังก์ชัน <code>gradeWithAI('${q.code}')</code>
+    (ดูจุดที่ต้องแก้ในซอร์สโค้ด: ค้นหาคำว่า <code>AI GRADING HOOK</code>)
+    <div class="ai-status pending" id="status-${q.code}">สถานะ: ⏳ รอการเชื่อมต่อ AI API</div>
+  `;
+
+  const gradeBtn = document.createElement('button');
+  gradeBtn.className = 'check-btn';
+  gradeBtn.style.marginTop = '10px';
+  gradeBtn.style.background = 'var(--ai)';
+  gradeBtn.textContent = 'ส่งให้ AI ตรวจ (ยังไม่เชื่อมต่อ)';
+  gradeBtn.onclick = () => gradeWithAI(q);
+
+  wrap.appendChild(hook);
+  wrap.appendChild(gradeBtn);
+  return wrap;
+}
+
+/* -------- THIS IS THE FUNCTION TO WIRE UP TO YOUR FULL SYSTEM -------- */
+async function gradeWithAI(q){
+  const statusEl = document.getElementById(`status-${q.code}`);
+  const answer = (state.answers[q.code] || '').trim();
+
+  if(!answer){
+    statusEl.textContent = 'สถานะ: กรุณาพิมพ์คำตอบก่อนส่งให้ AI ตรวจ';
+    statusEl.className = 'ai-status pending';
+    return;
+  }
+
+  statusEl.textContent = 'สถานะ: 🔧 [PLACEHOLDER] ยังไม่ได้เชื่อมต่อ AI API จริง — โค้ดนี้เป็นจุดที่ให้ไปเรียก API ของระบบเต็มของคุณ';
+  statusEl.className = 'ai-status pending';
+
+  /* ---- TODO: replace this block with your real AI API call ----
+  const res = await fetch("YOUR_AI_GRADING_ENDPOINT", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      questionCode: q.code,
+      questionText: q.text,
+      studentAnswer: answer,
+      rubric: q.rubric
+    })
+  });
+  const result = await res.json(); // { score, maxScore, feedback }
+  state.aiResult[q.code] = result;
+  statusEl.textContent = `สถานะ: ✅ AI ให้คะแนน ${result.score}/${result.maxScore} — ${result.feedback}`;
+  statusEl.className = 'ai-status scored';
+  renderResultsIfVisible();
+  ------------------------------------------------------------- */
+}
+
+function submitAll(){
+  const allQ = UNITS.flatMap(u => u.questions);
+  const mcQ = allQ.filter(q => q.type === 'mc');
+  const openQ = allQ.filter(q => q.type === 'open');
+
+  let autoCorrect = 0;
+  mcQ.forEach(q => { if(state.answers[q.code] === q.correctIndex) autoCorrect++; });
+
+  const aiScoredCount = openQ.filter(q => state.aiResult[q.code]).length;
+  const aiScoredSum = openQ.reduce((s,q) => s + (state.aiResult[q.code]?.score || 0), 0);
+
+  document.getElementById('autoScore').textContent = `${autoCorrect} / ${mcQ.length}`;
+  document.getElementById('aiPendingCount').textContent =
+    `${openQ.length - aiScoredCount} ข้อ รอ AI ตรวจ (จาก ${openQ.length} ข้อ)`;
+  document.getElementById('totalScored').textContent =
+    `${autoCorrect + aiScoredSum} คะแนน (จากข้อที่ตรวจแล้วเท่านั้น)`;
+
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('resultCard').scrollIntoView({behavior:'smooth'});
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+renderAll();
+</script>
+</body>
+</html>

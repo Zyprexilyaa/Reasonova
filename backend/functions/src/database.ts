@@ -188,29 +188,37 @@ export async function saveAnswerWithCriteria(
   score?: number
 ): Promise<string> {
   try {
+    const sanitizedQuestionId = propositionData?.id || propositionData?.questionId || 'unknown-question';
+    const sanitizedQuestionText = propositionData?.questionText || 'No question text provided';
+    const sanitizedLanguage = propositionData?.language || 'th';
+    const sanitizedDifficulty = propositionData?.difficulty || 'medium';
+    const sanitizedCategory = propositionData?.category || 'general';
+    const sanitizedExpectedAnswer = propositionData?.expectedAnswer || 'No expected answer provided';
+    const sanitizedRubric = propositionData?.scoringRubric || {};
+
     const docRef = await db.collection('answers').doc(userId).collection('submissions').add({
       // User & Question Info
       userId,
-      questionId: propositionData.id || propositionData.questionId,
-      questionText: propositionData.questionText,
+      questionId: sanitizedQuestionId,
+      questionText: sanitizedQuestionText,
       userAnswer,
-      language: propositionData.language || 'th',
-      
+      language: sanitizedLanguage,
+
       // Analysis
       analysisResult,
-      score: score || 0,
-      
+      score: typeof score === 'number' ? score : 0,
+
       // Proposition Criteria
-      difficulty: propositionData.difficulty,
-      category: propositionData.category,
-      expectedAnswer: propositionData.expectedAnswer,
-      scoringRubric: propositionData.scoringRubric || {},
-      
+      difficulty: sanitizedDifficulty,
+      category: sanitizedCategory,
+      expectedAnswer: sanitizedExpectedAnswer,
+      scoringRubric: sanitizedRubric,
+
       // Timestamps
       submittedAt: admin.firestore.FieldValue.serverTimestamp(),
       analyzedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-    
+
     console.log(`✅ Answer saved with criteria: ${docRef.id}`);
     return docRef.id;
   } catch (error) {

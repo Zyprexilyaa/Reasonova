@@ -5,7 +5,7 @@ import './PisaAssessmentPage.css';
 const SUBJECT_LABELS = {
     mathematics: { title: 'Mathematics', description: 'A friendly PISA-style mathematics practice experience is ready and accessible to teachers and students.' },
     science: { title: 'Science', description: 'Science content will be added here soon. The placeholder is now visible for both teachers and students.' },
-    reading: { title: 'Reading', description: 'Reading tasks will be added here soon. The placeholder is now visible for both teachers and students.' },
+    reading: { title: 'Reading', description: 'Reading tasks are now active. The page includes a sample PISA passage and an AI-assisted written-response workflow.' },
     collaborative: { title: 'Collaborative Problem Solving', description: 'Collaborative tasks will be added here soon. The placeholder is now visible for both teachers and students.' },
     global: { title: 'Global Competence', description: 'Global competence tasks will be added here soon. The placeholder is now visible for both teachers and students.' },
     creative: { title: 'Creative Thinking', description: 'Creative thinking tasks will be added here soon. The placeholder is now visible for both teachers and students.' },

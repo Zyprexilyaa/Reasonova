@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { HomePage } from './HomePage';
 import { QuestionPage } from './QuestionPage';
 import { Question } from '../types';
@@ -194,28 +194,7 @@ export const MainApp: React.FC = () => {
               </div>
             )
           } />
-          <Route path="/home/practice" element={
-            isLoadingProposition ? (
-              <div className="loading-container">
-                <div className="loading-spinner"></div>
-                <p>{language === 'th' ? 'กำลังโหลดคำถาม...' : 'Loading question...'}</p>
-              </div>
-            ) : examQuestion ? (
-              <QuestionPage 
-                question={activeQuestion}
-                studentId={studentId}
-                proposition={examQuestion}
-              />
-            ) : (
-              <div className="error-container">
-                <h2>{language === 'th' ? 'ไม่สามารถโหลดคำถามได้' : 'Cannot load question'}</h2>
-                <p>{language === 'th' ? 'กรุณาลองอีกครั้งหรือติดต่อผู้ดูแลระบบ' : 'Please try again or contact administrator'}</p>
-                <button onClick={() => navigate('/home')} className="btn btn-primary">
-                  {language === 'th' ? 'กลับสู่หน้าหลัก' : 'Back to Home'}
-                </button>
-              </div>
-            )
-          } />
+          <Route path="/home/practice" element={<Navigate to="/pisa" replace />} />
         </Routes>
       </main>
 
