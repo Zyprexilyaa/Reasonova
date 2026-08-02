@@ -24,7 +24,7 @@ export const PisaReadingPage = () => {
     const activeQuestionUnit = useMemo(() => activeQuestion ? readingUnits.find((unit) => unit.questions.some((question) => question.id === activeQuestion.id)) : undefined, [activeQuestion]);
     const isQuestionView = Boolean(questionId && questionId.trim()) && location.pathname.startsWith('/pisa/reading/question/');
     const isUnitView = Boolean(unitId && unitId.trim()) && location.pathname.startsWith('/pisa/reading/unit/');
-    const currentImages = useMemo(() => activeUnit?.images ?? [], [activeUnit]);
+    const currentImages = useMemo(() => activeUnit?.images ?? activeQuestionUnit?.images ?? [], [activeUnit, activeQuestionUnit]);
     const handleOpenSubmit = async (question) => {
         const answer = (answers[question.id] ?? '').trim();
         if (!answer) {
