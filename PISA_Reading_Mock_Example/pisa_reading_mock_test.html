@@ -143,6 +143,79 @@
     color:var(--ai); border:1px solid #d9cdf0; padding:6px 12px; border-radius:20px;
     font-size:.8rem; font-weight:700; margin-bottom:14px;
   }
+
+  /* ---------- Unit-select menu screen ---------- */
+  .menu-intro{font-size:.92rem; color:var(--muted); margin:0 0 20px;}
+  .menu-grid{display:grid; grid-template-columns:1fr; gap:14px;}
+  .menu-card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:18px 20px; display:flex; align-items:center; gap:16px;
+    box-shadow:0 2px 10px rgba(15,42,74,.06); cursor:pointer; transition:.15s;
+    text-align:left;
+  }
+  .menu-card:hover{border-color:var(--gold); transform:translateY(-1px);}
+  .menu-thumb{
+    width:64px; height:64px; flex:0 0 64px; border-radius:10px; overflow:hidden;
+    background:var(--navy); display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:1.4rem; font-weight:700;
+  }
+  .menu-thumb img{width:100%; height:100%; object-fit:cover;}
+  .menu-body{flex:1; min-width:0;}
+  .menu-title{font-weight:700; color:var(--navy); font-size:1.02rem; margin:0 0 4px;}
+  .menu-sub{font-size:.8rem; color:var(--muted); margin:0;}
+  .menu-tags{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
+  .menu-tags span{
+    font-size:.68rem; background:var(--bg); border:1px solid var(--line); color:var(--muted);
+    padding:2px 8px; border-radius:20px;
+  }
+  .menu-go{color:var(--gold); font-size:1.3rem; flex:0 0 auto;}
+  .menu-allbtn{
+    width:100%; margin-top:6px; background:var(--gold); color:#3a2c05; border:none;
+    padding:14px 20px; border-radius:12px; font-weight:700; font-size:.92rem; cursor:pointer;
+  }
+  .menu-allbtn:hover{background:#b8872e;}
+
+  .back-btn{
+    background:none; border:1px solid var(--line); color:var(--navy2); padding:8px 14px;
+    border-radius:8px; font-size:.85rem; font-weight:600; cursor:pointer; margin-bottom:16px;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .back-btn:hover{border-color:var(--navy2); background:#eef3f9;}
+
+  /* ---------- Image loader system ---------- */
+  .fig-gallery{display:flex; flex-direction:column; gap:14px; margin:14px 0 6px;}
+  .fig-box{
+    border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff;
+  }
+  .fig-frame{
+    position:relative; min-height:120px; background:#f0ede3;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fig-frame img{
+    width:100%; display:block; max-height:420px; object-fit:contain; cursor:zoom-in;
+    background:#fff;
+  }
+  .fig-loading, .fig-error{
+    padding:26px 16px; text-align:center; font-size:.82rem; color:var(--muted);
+  }
+  .fig-loading .spin{
+    width:22px; height:22px; margin:0 auto 8px; border-radius:50%;
+    border:3px solid #ddd6c5; border-top-color:var(--gold);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .fig-error{color:var(--red); background:var(--red-bg);}
+  .fig-error .path{
+    display:block; margin-top:4px; font-size:.72rem; color:#8a4238; word-break:break-all;
+  }
+  .fig-caption{
+    font-size:.8rem; color:var(--muted); padding:8px 12px; border-top:1px solid var(--line);
+  }
+  .lightbox{
+    position:fixed; inset:0; background:rgba(15,20,30,.86); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:24px; cursor:zoom-out;
+  }
+  .lightbox img{max-width:100%; max-height:100%; border-radius:6px; box-shadow:0 10px 40px rgba(0,0,0,.4);}
 </style>
 </head>
 <body>
@@ -155,6 +228,10 @@
 <div class="wrap">
 
   <div class="pending-pill" id="aiPendingPill">🤖 ระบบนี้เตรียม "จุดเชื่อม AI API" ไว้สำหรับข้อสร้างคำตอบอิสระ — ดูรายละเอียดที่ท้ายหน้า</div>
+
+  <div id="menuArea"></div>
+
+  <button class="back-btn" id="backBtn" style="display:none;" onclick="goToMenu()">← กลับไปเลือกบทอ่านอื่น</button>
 
   <div class="progressbar" id="progressBar"></div>
 
@@ -173,8 +250,12 @@
   </div>
 
   <div class="foot-note">
-    <strong>หมายเหตุ:</strong> เนื้อหาชุดนี้คัดมาจากไฟล์ที่อัปโหลด (2 บทอ่านเต็ม: "ทะเลสาบชาด" และ "ไข้หวัด")<br>
-    เอกสารต้นฉบับมีบทอ่านอีกจำนวนมาก (เช่น การบริจาคโลหิต, รถไฟใต้ดิน ฯลฯ) — เพิ่มลงใน <code>UNITS</code> array ด้านล่างของโค้ดได้ในรูปแบบเดียวกัน
+    <strong>หมายเหตุ:</strong> ทั้ง 5 บทอ่านนี้ถอดความจากไฟล์ PDF ต้นฉบับที่อัปโหลด (สสวท./PISA): "ทะเลสาบชาด" (หน้า 7–10),
+    "ไข้หวัด" (หน้า 11–16), "รอยพ่นสีบนกำแพง" (หน้า 17–20), "แรงงาน" (หน้า 21–25) และ "แคนโด" (หน้า 52–54)<br>
+    เอกสารต้นฉบับยังมีบทอ่านอีกหลายเรื่อง (เช่น "ของขวัญ" และ "อมันดา กับดัชเชส") ที่ยังไม่ได้ใส่ในไฟล์นี้ เนื่องจากเป็นบทอ่านเชิงวรรณกรรม/บทละครความยาวมาก
+    — ถ้าต้องการ แจ้งได้ ผมจะถอดมาเพิ่มให้<br>
+    รูปที่ 1–2 ของ "ทะเลสาบชาด" และแผนภูมิต้นไม้ของ "แรงงาน" วาดขึ้นใหม่เป็น SVG ให้ตรงกับรูปทรงข้อมูลจริงในไฟล์ต้นฉบับ<br>
+    เพิ่มบทอ่านของจริงต่อได้โดยเพิ่มอ็อบเจ็กต์ลงใน <code>UNITS</code> array ในรูปแบบเดียวกัน (ใส่ <code>images: [...]</code> เพื่อใช้ระบบโหลดภาพ)
   </div>
 
 </div>
@@ -189,10 +270,91 @@
         so an AI grader (or a teacher) has the criteria to score against.
    ============================================================ */
 
+/* ============================================================
+   IMAGE LOADER SYSTEM
+   -------------------------------------------------------------
+   `images: [...]` on a unit points at real files in ./assets/
+   (lakechad-fig1.png / lakechad-fig2.png were cropped directly out
+   of the source PDF — see extract_figures.py shipped alongside this
+   file for the crop tool). The loader below shows a spinner while
+   each <img> loads, the image once it succeeds, or a clear error
+   state with the broken path if the file is missing — so dropping
+   in a new unit before its image file exists fails loudly instead
+   of silently. LABOR_TREE is the one exception: it's a diagram
+   rebuilt as inline SVG (from the exact numbers in the source
+   table) rather than cropped, since that page wasn't in the PDF
+   pages provided.
+   ============================================================ */
+function svgDataUri(inner, w, h){
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">${inner}</svg>`;
+  return "data:image/svg+xml;utf8," + svg.replace(/#/g,'%23').replace(/\n/g,'');
+}
+
+/* Full org-chart for the "แรงงาน" (labor force) unit's tree diagram, matching the
+   6-level structure of the source table (ประชากรวัยแรงงาน -> ในภาคแรงงาน/ไม่อยู่ในภาคแรงงาน
+   -> มีการจ้างงาน/ตกงาน -> ทำงานเต็มเวลา/ไม่เต็มเวลา -> หางานทำเต็มเวลา/หางานทำไม่เต็มเวลา,
+   with a further split below that). */
+const LABOR_TREE = svgDataUri(`
+  <rect width="100%" height="100%" fill="#fbfaf6"/>
+  <g font-size="10" fill="#1c2530" text-anchor="middle">
+    <!-- Level 1 -->
+    <rect x="330" y="10" width="150" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="405" y="24">ประชากรวัยแรงงาน</text><text x="405" y="38">2656.5</text>
+
+    <!-- Level 2 -->
+    <rect x="160" y="70" width="150" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="235" y="84">ในภาคแรงงาน</text><text x="235" y="98">1706.5  64.2%</text>
+    <rect x="560" y="70" width="170" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="645" y="84">ไม่อยู่ในภาคแรงงาน</text><text x="645" y="98">949.9  35.8%</text>
+
+    <!-- Level 3 -->
+    <rect x="30" y="130" width="140" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="100" y="144">มีการจ้างงาน</text><text x="100" y="158">1578.4  92.5%</text>
+    <rect x="270" y="130" width="140" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="340" y="144">ตกงาน</text><text x="340" y="158">128.1  7.5%</text>
+
+    <!-- Level 4 -->
+    <rect x="10" y="190" width="140" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="80" y="204">ทำงานเต็มเวลา</text><text x="80" y="218">1237.1  78.4%</text>
+    <rect x="180" y="190" width="140" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="250" y="204">ไม่เต็มเวลา</text><text x="250" y="218">341.3  21.6%</text>
+
+    <!-- Level 5 (children of "ไม่เต็มเวลา") -->
+    <rect x="160" y="250" width="150" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="235" y="264">หางานทำเต็มเวลา</text><text x="235" y="278">101.6  79.3%</text>
+    <rect x="340" y="250" width="160" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="420" y="264">หางานทำไม่เต็มเวลา</text><text x="420" y="278">26.5  20.7%</text>
+
+    <!-- Level 6 (children of "หางานทำเต็มเวลา" at level 5) -->
+    <rect x="80" y="310" width="150" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="155" y="324">หางานทำเต็มเวลา</text><text x="155" y="338">23.2  6.8%</text>
+    <rect x="260" y="310" width="160" height="34" fill="#fff" stroke="#173d68"/>
+    <text x="340" y="324">หางานทำไม่เต็มเวลา</text><text x="340" y="338">318.1  93.2%</text>
+
+    <!-- Connecting lines -->
+    <line x1="405" y1="44" x2="235" y2="70" stroke="#6b7280"/>
+    <line x1="405" y1="44" x2="645" y2="70" stroke="#6b7280"/>
+    <line x1="235" y1="104" x2="100" y2="130" stroke="#6b7280"/>
+    <line x1="235" y1="104" x2="340" y2="130" stroke="#6b7280"/>
+    <line x1="100" y1="164" x2="80" y2="190" stroke="#6b7280"/>
+    <line x1="100" y1="164" x2="250" y2="190" stroke="#6b7280"/>
+    <line x1="250" y1="224" x2="235" y2="250" stroke="#6b7280"/>
+    <line x1="250" y1="224" x2="420" y2="250" stroke="#6b7280"/>
+    <line x1="235" y1="284" x2="155" y2="310" stroke="#6b7280"/>
+    <line x1="235" y1="284" x2="340" y2="310" stroke="#6b7280"/>
+  </g>
+`, 760, 360);
+
 const UNITS = [
   {
     id: "lakechad",
     title: "ทะเลสาบชาด (Lake Chad)",
+    emoji: "🌍",
+    tags: ["ค้นสาระ", "ตีความ", "กราฟ/แผนภูมิ"],
+    images: [
+      { id:"lakechad-fig1", src:"assets/lakechad-fig1.png", alt:"กราฟระดับน้ำทะเลสาบชาด", caption:"รูปที่ 1: กราฟแสดงระดับความลึกของทะเลสาบชาด ตั้งแต่ 8000 BC ถึง AD 1000 (ครอปจากไฟล์ PDF ต้นฉบับจริง หน้า 4)" },
+      { id:"lakechad-fig2", src:"assets/lakechad-fig2.png", alt:"ศิลปะบนหินแห่งซาฮารา", caption:"รูปที่ 2: แผนภาพศิลปะหินแห่งซาฮารา แสดงช่วงเวลาที่สัตว์แต่ละชนิดปรากฏในภาพวาดโบราณ (ครอปจากไฟล์ PDF ต้นฉบับจริง หน้า 4)" }
+    ],
     passage:
 `รูปที่ 1 แสดงการเปลี่ยนแปลงระดับน้ำของทะเลสาบชาด ในซาฮารา แอฟริกาเหนือ ทะเลสาบชาดสูญหายไร้ร่องรอย
 ประมาณ 20,000 ปีก่อนคริสตศักราช (20,000 BC) ช่วงปลายยุคน้ำแข็ง และประมาณ 11,000 ปีก่อนคริสตศักราช
@@ -217,7 +379,7 @@ const UNITS = [
           "สาบสูญไปแล้ว",
           "ข้อมูลไม่ได้ระบุ"
         ],
-        correctIndex: 1,
+        correctIndex: 0,
         meta: "สมรรถนะ: ค้นสาระ · ชนิดบทความ: แผนภูมิและกราฟ · แบบข้อสอบ: เลือกตอบ"
       },
       {
@@ -277,6 +439,8 @@ const UNITS = [
   {
     id: "flu",
     title: "ไข้หวัด (โครงการฉีดวัคซีนของบริษัททองไท)",
+    emoji: "💉",
+    tags: ["วิเคราะห์", "เชิงอาชีพ"],
     passage:
 `โครงการให้พนักงานสมัครใจสร้างภูมิคุ้มกันไข้หวัด ของบริษัททองไท
 
@@ -370,6 +534,245 @@ const UNITS = [
   "เห็นด้วย เพราะทุกคนควรได้รับการฉีด" หรือ "ไม่เห็นด้วย เพราะรูปภาพไม่เกี่ยวกับข่าวสาร"`
       }
     ]
+  },
+  {
+    id: "graffiti",
+    title: "รอยพ่นสีบนกำแพง",
+    emoji: "🎨",
+    tags: ["ตีความ", "วิเคราะห์", "การโต้แย้ง/ชักจูง"],
+    passageNote: "* ถอดความจากหน้า 17–19 ของไฟล์ต้นฉบับ (จดหมาย 2 ฉบับ)",
+    passage:
+`จดหมายสองฉบับนี้เกี่ยวข้องกับเรื่องรอยพ่นสีบนกำแพง ที่ได้มาจากอินเทอร์เน็ต รอยพ่นสีบนกำแพงเป็นการวาดภาพ
+และขีดเขียนบนกำแพงที่ผิดกฎหมาย ให้นักเรียนอ้างถึงจดหมายทั้งสองฉบับในการตอบคำถามต่อไปนี้
+
+— จดหมายฉบับที่ 1 (เกวลิน) —
+
+ฉันเดือดดาลไปด้วยความโกรธที่เห็นกำแพงโรงเรียนต้องถูกทำความสะอาดและทาสีใหม่ถึงสี่ครั้งเพื่อลบรอยพ่นสีบน
+กำแพง การสร้างสรรค์เป็นสิ่งที่น่ายกย่องเถิดจริงอยู่ แต่มนุษย์ควรจะหาวิธีการแสดงออกที่ไม่ต้องทำให้สังคม
+เดือดร้อนและสูญเสียค่าใช้จ่ายเพิ่มโดยไม่จำเป็น
+
+ทำไมคุณชอบทำลายชื่อเสียงของคนวัยรุ่นหนุ่มสาวด้วยการไปพ่นสีบนกำแพง ซึ่งเป็นข้อห้าม ศิลปินมีอาชีพหน่ะ เขาไม่
+แขวนงานของเขาข้างถนนหรอก จริงไหม แต่เขาจะหาเงินและชื่อเสียงโดยการแสดงนิทรรศการผลงานอย่างถูกต้องตาม
+กฎหมาย
+
+ในความเห็นของฉัน ไม่น่าจะเป็นตัวดีรั้ว ม้านั่งในสวนสาธารณะ ต่างก็ถูกออกแบบมาอย่างมีศิลปะในตัวเองแล้ว
+ทั้งนั้น มันน่าเสียดายที่จะไปทำลายงานสถาปัตยกรรมนี้เสีย ด้วยรอยพ่นสี และยิ่งกว่านั้น วิธีนี้ยังทำลายชั้นโอโซนใน
+บรรยากาศอีกด้วย จริงๆ นะ ฉันไม่เข้าใจเลยว่าทำไมศิลปินอาชญากรรมเหล่านี้จึงรู้สึกเดือดร้อนเมื่อเห็นว่า "งานศิลปะ"
+ของพวกเขาถูกล้างออกครั้งแล้วครั้งเล่า
+
+เกวลิน
+
+— จดหมายฉบับที่ 2 (โสภิตา) —
+
+ไม่ต้องพูดกันเรื่องรสนิยม ทุกวันนี้สังคมเต็มไปด้วยการสื่อสารและการโฆษณา ตามถนนมีแต่ตราของบริษัท ชื่อห้างร้าน
+โปสเตอร์ขนาดมหีมา สิ่งเหล่านี้เป็นสิ่งที่ยอมรับได้ใช่ไหม ใช่ ส่วนใหญ่ยอมรับกันได้ แล้วรอยพ่นสีบนกำแพงล่ะ
+ยอมรับกันได้ไหม บางคนก็บอกว่าได้ บางคนก็บอกว่าไม่ได้
+
+ใครเป็นคนจ่ายค่าพ่นสีบนกำแพง ในที่สุดใครเป็นคนจ่ายค่าโฆษณา ใช่ผู้บริโภคใช่ไหม
+
+คนที่เอาแผ่นป้ายโฆษณามาเที่ยวแปะ เคยขออนุญาตไหม ก็ไม่เคย พวกพ่นสีบนกำแพงทำเช่นนั้นบ้างได้ไหม มันไม่ใช่
+เรื่องของการรบกวน ชื่อของตัวเอง-ชื่อแก๊ง และผลงานศิลปะขึ้นใหญ่ๆ ตามข้างถนน
+
+ลองนึกถึงผ้าลายทาง และลายหมาลายกรุก ที่มีขายตามร้านเมื่อสองสามปีก่อน และลายเสื้อผ้าของนักเล่นสกี ทั้งลาย
+และสีของผ้าเหล่านี้ก็ถูกโยงมาจากลายที่ตกแต่งไว้อย่างสวยงามบนกำแพงคอนกรีตตามข้างถนนนั่นเอง ลายสีลวดลาย
+เหล่านี้เป็นที่ยอมรับ และชื่นชม แต่รอยพ่นสีบนกำแพงซึ่งเป็นแบบเดียวกันกลับถูกมองว่าทุเรศ โลกนี้มันช่างยากนัก
+สำหรับศิลปิน
+
+โสภิตา`,
+    questions: [
+      {
+        type: "mc",
+        code: "GRAFFITI-Q1",
+        text: "คำถามที่ 1: จุดประสงค์ของจดหมายทั้งสองฉบับนี้ เพื่อ",
+        options: [
+          "อธิบายว่ารอยพ่นสีบนกำแพงคืออะไร",
+          "แสดงความคิดเห็นต่อรอยพ่นสีบนกำแพง",
+          "แสดงให้เห็นความนิยมของรอยพ่นสีบนกำแพง",
+          "บอกผู้อ่านให้รู้ว่าต้องใช้เงินมากเท่าไรในการกำจัดรอยพ่นสีบนกำแพง"
+        ],
+        correctIndex: 1,
+        meta: "สมรรถนะ: ตีความ · ชนิดของบทความ: การโต้แย้งหรือชักจูง · สถานการณ์: ชุมชนท้องถิ่น · แบบข้อสอบ: เลือกตอบ"
+      },
+      {
+        type: "open",
+        code: "GRAFFITI-Q2",
+        text: "คำถามที่ 2: ทำไมโสภิตาจึงอ้างถึงการโฆษณา?",
+        meta: "สมรรถนะ: ตีความ · ชนิดของบทความ: การโต้แย้งหรือชักจูง · สถานการณ์: ชุมชนท้องถิ่น · แบบข้อสอบ: สร้างคำตอบอิสระ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 18]
+ได้คะแนนเต็ม: คำตอบที่มีการเปรียบเทียบระหว่างรอยพ่นสีบนกำแพงกับการโฆษณา ตรงกับแนวคิดว่าการโฆษณาเป็น
+  รอยพ่นสีบนกำแพงที่ถูกกฎหมาย เช่น
+  • "เพื่อให้เราเห็นว่าภาพโฆษณาก็เหมือน ๆ กับภาพพ่นสีบนกำแพงเหมือนกัน"
+  • "เธอบอกว่าการโฆษณาเป็นเหมือนรอยพ่นสีบนกำแพงที่ถูกกฎหมาย"
+  • "เพราะการโฆษณาถูกนำเข้ามาสู่สังคมโดยไม่ได้รับอนุญาต เช่นเดียวกับรอยพ่นสีบนกำแพง"
+ไม่ได้คะแนน: ให้เหตุผลไม่เพียงพอ หรือคลุมเครือเกินไป เช่น "เป็นวิธีที่เสนอทัศนะของตัวเอง" หรือ "มันเป็นกลยุทธ์"`
+      },
+      {
+        type: "open",
+        code: "GRAFFITI-Q3",
+        text: "คำถามที่ 3: นักเรียนเห็นด้วยกับจดหมายฉบับใด จงอธิบายโดยใช้คำพูดของนักเรียนเอง",
+        meta: "สมรรถนะ: วิเคราะห์ · ชนิดของบทความ: การโต้แย้งหรือชักจูง · สถานการณ์: ชุมชนท้องถิ่น · แบบข้อสอบ: สร้างคำตอบอิสระ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 19]
+ได้คะแนนเต็ม: คำตอบที่อธิบายความเห็นของตนเองโดยอ้างเนื้อหาของจดหมายฉบับใดฉบับหนึ่งหรือทั้งสองฉบับ
+  คำอธิบายต้องสมเหตุสมผล และสอดคล้องกับจุดยืนที่นักเรียนเลือก
+ไม่ได้คะแนน: ให้ความเห็นของตนเองโดยตัดขาดจากเนื้อหาของจดหมาย หรือแสดงความเข้าใจที่ไม่ถูกต้องในเนื้อหา`
+      },
+      {
+        type: "open",
+        code: "GRAFFITI-Q4",
+        text: "คำถามที่ 4: ถ้าไม่คำนึงถึงว่านักเรียนเห็นด้วยหรือไม่เห็นด้วยกับจดหมายฉบับใด ในความคิดของนักเรียนคิดว่าจดหมายฉบับใดดีกว่ากัน ให้อธิบายโดยอ้างถึงวิธีการเขียนจดหมายฉบับใดฉบับหนึ่ง หรือทั้งสองฉบับ",
+        meta: "สมรรถนะ: วิเคราะห์ · ชนิดของบทความ: การโต้แย้งหรือชักจูง · สถานการณ์: ชุมชนท้องถิ่น · แบบข้อสอบ: สร้างคำตอบอิสระ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 20]
+ได้คะแนนเต็ม: คำตอบที่อธิบายความคิดเห็นโดยอ้างถึงลักษณะการเขียน หรือรูปแบบของจดหมายฉบับใดฉบับหนึ่งหรือ
+  ทั้งสองฉบับ (โครงสร้างของการโต้แย้ง, ความน่าเชื่อถือ, ระดับการแสดงอารมณ์, การใช้คำ ฯลฯ) ไม่ใช่แค่เนื้อหา
+ไม่ได้คะแนน: ตัดสินในแง่ของการเห็นด้วยหรือไม่เห็นด้วยกับจุดยืนของผู้เขียน โดยไม่กล่าวถึงรูปแบบการเขียน`
+      }
+    ]
+  },
+  {
+    id: "labor",
+    title: "แรงงาน (โครงสร้างแรงงานของประเทศ)",
+    emoji: "📊",
+    tags: ["ตีความ", "ค้นสาระ", "แผนภาพ"],
+    images: [
+      { id:"labor-tree", src: LABOR_TREE, alt:"แผนภูมิต้นไม้โครงสร้างแรงงาน", caption:"โครงสร้างแรงงาน ณ วันที่ 31 มีนาคม 2538ฯ (หน่วยเป็นพันคน)" }
+    ],
+    passageNote: "* ถอดความจากหน้า 21 ของไฟล์ต้นฉบับ",
+    passage:
+`แผนภูมิข้างล่างนี้ แสดงโครงสร้างแรงงานของประเทศ หรือประชากรวัยแรงงาน
+ประชากรทั้งหมดของประเทศในปี พ.ศ. 2538 ประมาณ 3.4 ล้านคน
+
+โครงสร้างแรงงาน ณ วันที่ 31 มีนาคม 2538 (หน่วยเป็นพันคน)
+
+ประชากรวัยแรงงาน 2656.5 พันคน แบ่งเป็น "ในภาคแรงงาน" 1706.5 พันคน (64.2%) และ "ไม่อยู่ในภาคแรงงาน"
+949.9 พันคน (35.8%)
+
+กลุ่ม "ในภาคแรงงาน" แบ่งเป็น "มีการจ้างงาน" 1578.4 พันคน (92.5%) และ "ตกงาน" 128.1 พันคน (7.5%)
+
+กลุ่ม "มีการจ้างงาน" แบ่งเป็น "ทำงานเต็มเวลา" 1237.1 พันคน (78.4%) และ "ไม่เต็มเวลา" 341.3 พันคน (21.6%)
+
+หมายเหตุ: นิยามประชากรวัยแรงงาน คือ ประชากรที่มีอายุระหว่าง 15 ถึง 65 ปี ประชากรไม่อยู่ในภาคแรงงานเป็น
+กลุ่มที่ไม่ขวนขวายหางานทำ และ/หรือไม่พร้อมสำหรับงาน`,
+    questions: [
+      {
+        type: "mc",
+        code: "LABOR-Q1",
+        text: "คำถามที่ 1: การแบ่งกลุ่มประชากรวัยแรงงานหลัก แบ่งออกเป็น 2 กลุ่มตามข้อใด",
+        options: [
+          "มีการจ้างงานและตกงาน",
+          "วัยทำงานและไม่ใช่วัยทำงาน",
+          "ทำงานเต็มเวลาและไม่เต็มเวลา",
+          "ในภาคแรงงานและไม่อยู่ในภาคแรงงาน"
+        ],
+        correctIndex: 3,
+        meta: "สมรรถนะ: ตีความ · ชนิดของบทความ: แผนภาพ · สถานการณ์: ในเชิงการศึกษา · แบบข้อสอบ: เลือกตอบ"
+      },
+      {
+        type: "open",
+        code: "LABOR-Q2",
+        text: "คำถามที่ 2: ประชากรในวัยแรงงานที่ไม่อยู่ในภาคแรงงานมีเท่าไร (ให้เขียนจำนวนประชากร ไม่ใช่ร้อยละของประชากร)",
+        meta: "สมรรถนะ: ค้นสาระ · ชนิดของบทความ: แผนภาพ · สถานการณ์: ในเชิงการศึกษา · แบบข้อสอบ: ตอบสั้น ๆ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 22]
+ได้คะแนนเต็ม: คำตอบที่บอกตัวเลขในแผนภูมิต้นไม้และรวมหลัก "พัน" ในหัวเรื่องเข้าด้วยกัน คือ 949,900 ให้ถือว่า
+  ตัวเลขที่บอกค่าระหว่าง 949,000–950,000 ใช้ได้ เช่น 949,900 / 950,000 / 9.49 แสน / เกือบหนึ่งล้าน / ประมาณ 9 แสน
+ได้คะแนนบางส่วน: บอกตัวเลขในแผนภูมิต้นไม้ไม่ได้ แต่รวมหลัก "พัน" ถูกต้อง เช่น 949.9 / น้อยกว่า 950 / 94,900
+ไม่ได้คะแนน: คำตอบอื่น ๆ เช่น "35.8%" หรือ "7.50%"`
+      },
+      {
+        type: "mc",
+        code: "LABOR-Q3",
+        text: "คำถามที่ 3: ข้อมูลโครงสร้างแรงงานที่นำเสนอในรูปแผนภูมิต้นไม้นั้น สามารถนำเสนอได้หลายวิธี เช่น เขียนบรรยาย ใช้แผนภูมิวงกลม แผนภูมิเส้น หรือตาราง การที่เลือกนำเสนอด้วยแผนภูมิต้นไม้ อาจเป็นเพราะมีประโยชน์ในการแสดงถึงอะไร",
+        options: [
+          "การเปลี่ยนแปลงเมื่อเวลาเปลี่ยนไป",
+          "ขนาดของประชากรรวมของประเทศ",
+          "ประเภทที่มีอยู่แต่ละกลุ่ม",
+          "ขนาดของแต่ละกลุ่ม"
+        ],
+        correctIndex: 2,
+        meta: "สมรรถนะ: วิเคราะห์ · ชนิดของบทความ: แผนภาพ · สถานการณ์: ในเชิงการศึกษา · แบบข้อสอบ: เลือกตอบ"
+      }
+    ]
+  },
+  {
+    id: "cando",
+    title: "แคนโด (ศูนย์กลางการหางานและเปลี่ยนงาน)",
+    emoji: "🏢",
+    tags: ["ค้นสาระ", "เชิงอาชีพ"],
+    passageNote: "* ถอดความจากหน้า 52–53 ของไฟล์ต้นฉบับ (ประกาศฝ่ายบุคคล บริษัทแคนโด)",
+    passage:
+`บริษัทแคนโด — แผนกบุคคล
+ศูนย์กลางการหางานและเปลี่ยนงานภายในและภายนอกองค์กร
+
+ศปง. คืออะไร
+ศปง. ย่อมาจาก ศูนย์กลางการหางานและเปลี่ยนงานภายในและภายนอกองค์กร เป็นการริเริ่มและดำเนินการโดย
+พนักงานของแผนกบุคคล ร่วมกับสมาชิกจากแผนกอื่น ๆ และที่ปรึกษาด้านอาชีพการงานจากภายนอก
+
+ศปง. พร้อมที่จะให้ความช่วยเหลือพนักงานในการหางานใหม่ทั้งภายในและภายนอกบริษัทฯ
+
+ศปง. ทำอะไรบ้าง
+ศปง. สนับสนุนลูกจ้างที่ต้องการเปลี่ยนงานอย่างจริงจัง โดยใช้กิจกรรมต่าง ๆ ต่อไปนี้:
+
+• ฐานข้อมูลเกี่ยวกับงาน — หลังจากการสัมภาษณ์ ข้อมูลทั้งหมดของพนักงานจะถูกเก็บไว้ในฐานข้อมูลเพื่อใช้สำหรับ
+  ผู้ต้องการหางานและตำแหน่งงานว่างในบริษัทแคนโดและในบริษัทอื่น ๆ
+• การแนะแนว — ศักยภาพของลูกจ้างจะได้รับการสำรวจโดยการปรึกษากับนักแนะแนวด้านอาชีพ
+• จัดสอนวิชาต่าง ๆ — มีการจัดสอนวิชาต่าง ๆ (โดยร่วมมือกับฝ่ายข้อมูลข่าวสารและการอบรม) เกี่ยวกับการหางาน
+  และการวางแผนด้านอาชีพ
+• โครงการเปลี่ยนอาชีพ — ศปง. ให้การสนับสนุนและประสานโครงการเพื่อช่วยให้พนักงานได้เตรียมตัวสำหรับงาน
+  อาชีพใหม่ ๆ และโลกทัศน์ใหม่
+• เป็นตัวแทน — ศปง. ทำหน้าที่เป็นตัวแทนสำหรับพนักงานที่ถูกให้ออกจากงานเนื่องจากการปรับองค์กร และหา
+  ตำแหน่งงานใหม่ให้ถ้าจำเป็น
+
+ศปง. คิดค่าใช้จ่ายอย่างไร
+การคิดค่าใช้จ่ายจะมีการปรึกษาและได้รับความเห็นชอบจากแผนกที่คุณทำงานด้วย ส่วนใหญ่การบริการของ ศปง.
+หลายอย่างไม่คิดค่าใช้จ่าย คุณอาจถูกขอให้จ่ายบ้างในรูปของเงินหรือการสละเวลาทำงานให้กับเรา
+
+ศปง. ทำงานอย่างไร
+ศปง. ช่วยพนักงานที่ต้องการเปลี่ยนงานอย่างจริงจังไม่ว่าจะภายใน หรือภายนอกหน่วยงานที่ทำอยู่
+
+กระบวนการเริ่มจากส่งใบสมัคร การเข้าพบนักแนะแนวจะมีประโยชน์ต่อท่านมาก ท่านควรต้องไปพูดกับนักแนะแนว
+เพื่อจะได้รู้ว่าท่านต้องการอะไร และพิจารณาถึงความเป็นไปได้ในงานที่ท่านจะทำ นักแนะแนวจะคุ้นเคยกับความ
+สามารถของท่านและการพัฒนาหน่วยงานที่ท่านทำอยู่
+
+การติดต่อกับ ศปง. ไม่ว่าในกรณีใดก็ตาม ให้นักแนะแนวสมัครงานแทนท่าน หลังจากนั้นท่านจะได้รับเชิญให้เข้า
+สนทนากับตัวแทนของ ศปง.
+
+ต้องการข้อมูลเพิ่มเติม
+ขอข้อมูลเพิ่มเติมได้ที่แผนกบุคคล`,
+    questions: [
+      {
+        type: "open",
+        code: "CANDO-Q1",
+        text: "คำถามที่ 1: ตามประกาศ ท่านจะขอข้อมูลเพิ่มเติมเกี่ยวกับ ศปง. ได้จากที่ใด",
+        meta: "สมรรถนะ: ค้นสาระ · ชนิดของบทความ: เชิงอธิบาย · สถานการณ์: ในเชิงอาชีพ · แบบข้อสอบ: ตอบสั้น ๆ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 53]
+ได้คะแนนเต็ม: คำตอบระบุอย่างน้อยหนึ่งในสองข้อต่อไปนี้ (1) จากแผนกบุคคล (2) จากนักแนะแนวบุคคล เช่น
+  "แผนกบุคคล" หรือ "นักแนะแนวบุคคล สามารถให้ข้อมูลท่านได้มากกว่า"
+ไม่ได้คะแนน: คำตอบอื่น ๆ เช่น "บริษัทแคนโด"`
+      },
+      {
+        type: "open",
+        code: "CANDO-Q2",
+        text: "คำถามที่ 2: จงบอกวิธีที่ ศปง. ช่วยคนที่จะต้องถูกออกจากงานเนื่องจากมีการปรับปรุงองค์กร มาสองวิธี",
+        meta: "สมรรถนะ: ค้นสาระ · ชนิดของบทความ: เชิงอธิบาย · สถานการณ์: ในเชิงอาชีพ · แบบข้อสอบ: สร้างคำตอบอิสระ",
+        needsAI: true,
+        rubric:
+`[เกณฑ์การให้คะแนน — ถอดจากไฟล์ต้นฉบับ หน้า 54]
+ได้คะแนนเต็ม: คำตอบต้องระบุทั้งสองอย่างต่อไปนี้ (1) ศปง. จะทำหน้าที่เหมือนเป็นตัวแทน หรือ ผู้แทนหางาน
+  (2) ศปง. ช่วยหางานให้ใหม่ [ไม่รับคำว่า "ธนาคารข้อมูลเกี่ยวกับงาน" "การแนะแนว" "หลักสูตร" หรือ "โครงการ
+  เปลี่ยนงาน" เพียงลำพัง] ตัวอย่างคำตอบ: "เป็นตัวแทนหางาน ช่วยด้วยการหางานใหม่เมื่อจำเป็น"
+ไม่ได้คะแนน: ระบุกิจกรรมเพียงอย่างเดียว เช่น "ทำโครงการเปลี่ยนงาน" หรือ "เปิดหลักสูตร" โดยไม่กล่าวถึงบทบาท
+  ตัวแทนหางาน`
+      }
+    ]
   }
 ];
 
@@ -377,19 +780,100 @@ const UNITS = [
    STATE
    ============================================================ */
 const state = {
+  mode: 'menu',      // 'menu' -> choosing a unit | 'test' -> answering | 'results' -> summary shown
+  activeUnitIds: null, // null = not chosen yet; array of unit ids to render ("all" picks every unit)
   answers: {},     // code -> selected index (mc) or text (open)
   checkedMC: {},    // code -> true once "ตรวจคำตอบ" clicked
   aiResult: {}       // code -> { score, feedback } once AI grading has been run
 };
 
 /* ============================================================
+   MENU (unit-select screen)
+   ============================================================ */
+const menuArea = document.getElementById('menuArea');
+const testArea = document.getElementById('testArea');
+const backBtn = document.getElementById('backBtn');
+
+function renderMenu(){
+  menuArea.innerHTML = '';
+  const intro = document.createElement('p');
+  intro.className = 'menu-intro';
+  intro.textContent = 'เลือกบทอ่านที่ต้องการทำก่อน 1 บท หรือกดทำข้อสอบทั้งหมดรวดเดียว';
+  menuArea.appendChild(intro);
+
+  const grid = document.createElement('div');
+  grid.className = 'menu-grid';
+
+  UNITS.forEach(unit => {
+    const card = document.createElement('button');
+    card.className = 'menu-card';
+    card.type = 'button';
+    const thumbImg = unit.images && unit.images[0]
+      ? `<img src="${unit.images[0].src}" alt="" onerror="this.parentElement.textContent='${unit.emoji || '📄'}'; this.remove();">`
+      : (unit.emoji || '📄');
+    card.innerHTML = `
+      <div class="menu-thumb">${thumbImg}</div>
+      <div class="menu-body">
+        <p class="menu-title">${unit.title}</p>
+        <p class="menu-sub">${unit.questions.length} ข้อ · ${unit.questions.filter(q=>q.type==='mc').length} เลือกตอบ · ${unit.questions.filter(q=>q.type==='open').length} เขียนตอบ (AI ตรวจ)</p>
+        <div class="menu-tags">${(unit.tags||[]).map(t=>`<span>${t}</span>`).join('')}</div>
+      </div>
+      <div class="menu-go">›</div>
+    `;
+    card.onclick = () => startTest([unit.id]);
+    grid.appendChild(card);
+  });
+
+  menuArea.appendChild(grid);
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'menu-allbtn';
+  allBtn.textContent = `📚 ทำข้อสอบทั้งหมด (${UNITS.length} บทอ่าน, ${UNITS.flatMap(u=>u.questions).length} ข้อ)`;
+  allBtn.onclick = () => startTest(UNITS.map(u => u.id));
+  menuArea.appendChild(allBtn);
+}
+
+function startTest(unitIds){
+  state.mode = 'test';
+  state.activeUnitIds = unitIds;
+  // reset per-attempt state so switching units doesn't carry over stale progress bar segments
+  state.answers = {}; state.checkedMC = {}; state.aiResult = {};
+  document.getElementById('resultCard').style.display = 'none';
+  renderRoute();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function goToMenu(){
+  state.mode = 'menu';
+  state.activeUnitIds = null;
+  renderRoute();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderRoute(){
+  if(state.mode === 'menu'){
+    menuArea.style.display = '';
+    backBtn.style.display = 'none';
+    document.getElementById('progressBar').style.display = 'none';
+    testArea.style.display = 'none';
+    renderMenu();
+  } else {
+    menuArea.style.display = 'none';
+    backBtn.style.display = 'inline-flex';
+    document.getElementById('progressBar').style.display = '';
+    testArea.style.display = '';
+    renderAll();
+  }
+}
+
+/* ============================================================
    RENDER
    ============================================================ */
-const testArea = document.getElementById('testArea');
 
 function renderAll(){
   testArea.innerHTML = '';
-  UNITS.forEach(unit => testArea.appendChild(renderUnit(unit)));
+  const activeUnits = UNITS.filter(u => state.activeUnitIds.includes(u.id));
+  activeUnits.forEach(unit => testArea.appendChild(renderUnit(unit)));
 
   const submitWrap = document.createElement('div');
   submitWrap.style.textAlign = 'center';
@@ -407,7 +891,8 @@ function renderAll(){
 function renderProgress(){
   const bar = document.getElementById('progressBar');
   bar.innerHTML = '';
-  const allQ = UNITS.flatMap(u => u.questions);
+  const activeUnits = UNITS.filter(u => state.activeUnitIds.includes(u.id));
+  const allQ = activeUnits.flatMap(u => u.questions);
   allQ.forEach(q => {
     const seg = document.createElement('div');
     seg.className = 'seg';
@@ -430,8 +915,70 @@ function renderUnit(unit){
     <div class="passage-note">${unit.passageNote || ''}</div>
   `;
 
+  if(unit.images && unit.images.length){
+    card.appendChild(renderFigureGallery(unit.images));
+  }
+
   unit.questions.forEach(q => card.appendChild(renderQuestion(q)));
   return card;
+}
+
+/* ============================================================
+   IMAGE LOADER SYSTEM
+   -------------------------------------------------------------
+   Renders each entry in a unit's `images` array as a figure box:
+   shows a spinner while the image loads, the image itself once
+   loaded (click to open a lightbox), or a clear error state with
+   the broken path shown, if the file can't be fetched. Point
+   `img.src` at real files/URLs in your own project — everything
+   else here keeps working unchanged.
+   ============================================================ */
+function renderFigureGallery(images){
+  const gallery = document.createElement('div');
+  gallery.className = 'fig-gallery';
+
+  images.forEach(img => {
+    const box = document.createElement('div');
+    box.className = 'fig-box';
+
+    const frame = document.createElement('div');
+    frame.className = 'fig-frame';
+    frame.innerHTML = `<div class="fig-loading"><div class="spin"></div>กำลังโหลดรูปภาพ...</div>`;
+    box.appendChild(frame);
+
+    const caption = document.createElement('div');
+    caption.className = 'fig-caption';
+    caption.textContent = img.caption || '';
+    box.appendChild(caption);
+
+    const el = new Image();
+    el.alt = img.alt || '';
+    el.onload = () => {
+      frame.innerHTML = '';
+      el.onclick = () => openLightbox(img.src, img.alt);
+      frame.appendChild(el);
+    };
+    el.onerror = () => {
+      frame.innerHTML = `
+        <div class="fig-error">
+          ⚠️ โหลดรูปภาพไม่สำเร็จ (ไฟล์ยังไม่มีอยู่จริง)
+          <span class="path">${escapeHtml(img.src)}</span>
+        </div>`;
+    };
+    el.src = img.src;
+
+    gallery.appendChild(box);
+  });
+
+  return gallery;
+}
+
+function openLightbox(src, alt){
+  const box = document.createElement('div');
+  box.className = 'lightbox';
+  box.innerHTML = `<img src="${src}" alt="${escapeHtml(alt||'')}">`;
+  box.onclick = () => box.remove();
+  document.body.appendChild(box);
 }
 
 function renderQuestion(q){
@@ -628,7 +1175,8 @@ async function gradeWithAI(q){
 }
 
 function submitAll(){
-  const allQ = UNITS.flatMap(u => u.questions);
+  const activeUnits = UNITS.filter(u => state.activeUnitIds.includes(u.id));
+  const allQ = activeUnits.flatMap(u => u.questions);
   const mcQ = allQ.filter(q => q.type === 'mc');
   const openQ = allQ.filter(q => q.type === 'open');
 
@@ -654,7 +1202,7 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
-renderAll();
+renderRoute();
 </script>
 </body>
 </html>

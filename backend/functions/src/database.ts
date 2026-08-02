@@ -3,6 +3,8 @@ import * as admin from 'firebase-admin';
 // Initialize Firebase Admin SDK
 const projectId = process.env.GCP_PROJECT_ID;
 const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
+const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_EMULATOR_HOST;
+const useFirestoreEmulator = process.env.USE_FIRESTORE_EMULATOR === 'true' && Boolean(emulatorHost);
 let effectiveProjectId: string | undefined = projectId;
 let backendAuthSource = 'unknown';
 
@@ -10,8 +12,12 @@ console.log('🔧 Initializing Firebase Admin...');
 console.log(`📦 GCP_PROJECT_ID: ${projectId || 'not provided'}`);
 console.log(`🔐 FIREBASE_SERVICE_ACCOUNT: ${serviceAccountEnv ? 'present' : 'missing'}`);
 
-if (process.env.FIRESTORE_EMULATOR_HOST) {
-  console.log(`📡 Using Firestore emulator at ${process.env.FIRESTORE_EMULATOR_HOST}`);
+if (emulatorHost && !useFirestoreEmulator) {
+  console.log(`⚠️ Firestore emulator host is configured but USE_FIRESTORE_EMULATOR is not true; ignoring emulator connection.`);
+}
+
+if (useFirestoreEmulator) {
+  console.log(`📡 Using Firestore emulator at ${emulatorHost}`);
 }
 
 // Initialize Firebase Admin SDK with flexible credential handling.
@@ -22,8 +28,8 @@ if (admin.apps.length === 0) {
   console.log('⚙️  Creating new Firebase app instance...');
 
   try {
-    if (process.env.FIREBASE_EMULATOR_HOST) {
-      // When using the emulator, no credentials are required
+    if (useFirestoreEmulator && emulatorHost) {
+      // When explicitly using the emulator, no credentials are required.
       admin.initializeApp({ projectId });
       console.log('✅ Firebase initialized for emulator');
     } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -96,8 +102,8 @@ export const backendInitInfo = {
 };
 
 // Log emulator status
-if (process.env.FIRESTORE_EMULATOR_HOST) {
-  console.log(`📡 Using Firestore emulator at ${process.env.FIRESTORE_EMULATOR_HOST}`);
+if (useFirestoreEmulator && emulatorHost) {
+  console.log(`📡 Using Firestore emulator at ${emulatorHost}`);
 }
 
 /**

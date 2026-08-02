@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import './PisaAssessmentPage.css';
 
-type SubjectKey = 'mathematics' | 'science' | 'reading' | 'collaborative' | 'global' | 'creative';
+type SubjectKey = 'mathematics' | 'reading' | 'science' | 'collaborative' | 'global' | 'creative';
 
 interface SubjectCard {
   key: SubjectKey;
@@ -25,20 +25,20 @@ const SUBJECTS: SubjectCard[] = [
     path: '/pisa/mathematics',
   },
   {
+    key: 'reading',
+    title: 'Reading',
+    description: 'Lake Chad reading tasks with charts, evidence-based questions, and AI-assisted written feedback.',
+    badge: 'Ready',
+    ready: true,
+    path: '/pisa/reading',
+  },
+  {
     key: 'science',
     title: 'Science',
     description: 'Hands-on science reasoning activities and evidence-based prompts coming soon.',
     badge: 'Coming soon',
     ready: false,
     path: '/pisa/science',
-  },
-  {
-    key: 'reading',
-    title: 'Reading',
-    description: 'Reading comprehension with a PISA-style passage and AI-assisted written response scoring.',
-    badge: 'Ready',
-    ready: true,
-    path: '/pisa/reading',
   },
   {
     key: 'collaborative',
@@ -100,10 +100,26 @@ export const PisaAssessmentPage: React.FC = () => {
         <section className="pisa-card">
           <div className="pisa-grid">
             {SUBJECTS.map((subject) => (
-              <button
+              <div
                 key={subject.key}
                 className={`pisa-subject-card ${subject.ready ? 'ready' : ''}`}
-                onClick={() => setSelectedSubject(subject.key)}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setSelectedSubject(subject.key);
+                  if (subject.ready) {
+                    navigate(subject.path);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setSelectedSubject(subject.key);
+                    if (subject.ready) {
+                      navigate(subject.path);
+                    }
+                  }
+                }}
                 style={{ textAlign: 'left', cursor: 'pointer' }}
               >
                 <span className="pisa-badge">{subject.badge}</span>
@@ -111,16 +127,23 @@ export const PisaAssessmentPage: React.FC = () => {
                 <p>{subject.description}</p>
                 {subject.ready ? (
                   <div className="pisa-actions">
-                    <Link className="pisa-btn secondary" to={subject.path}>
+                    <button
+                      type="button"
+                      className="pisa-btn secondary"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate(subject.path);
+                      }}
+                    >
                       {language === 'th' ? 'เปิดหน้า' : 'Open'}
-                    </Link>
+                    </button>
                   </div>
                 ) : (
                   <div className="pisa-metadata">
                     <span>{language === 'th' ? 'พร้อมให้ครูและนักเรียนดู' : 'Visible to teachers and students'}</span>
                   </div>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         </section>
