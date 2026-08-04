@@ -311,11 +311,7 @@ export async function analyzeStudentAnswer(
     // Create the analysis prompt for Gemini
     const analysisPrompt = buildScoringPrompt(req, officialScoringData);
 
-    // Check if Gemini API is available
-    if (!clientApiKey) {
-      console.warn('🔄 Gemini API not available, using mock analysis');
-      return await generateMockAnalysis(req);
-    }
+    // Proceed to call Gemini API — authentication may come from API key, OAuth token, or service account
 
     // Try Gemini API first (via v1beta REST API)
     try {
