@@ -1,6 +1,7 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import {
   AnalyzeAnswerRequest,
   AnalyzeAnswerResponse,
@@ -20,6 +21,68 @@ console.log('========================');
 
 if (!clientApiKey) {
   console.warn('GOOGLE_API_KEY not set - will use mock analysis fallback');
+}
+
+// Service account access token cache
+let _saAccessToken: { token: string; expiry: number } | null = null;
+
+async function getServiceAccountAccessToken(): Promise<string> {
+  // Return cached token if still valid (with 60s buffer)
+  if (_saAccessToken && Date.now() < _saAccessToken.expiry - 60000) {
+    return _saAccessToken.token;
+  }
+
+  const saJson = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  if (!saJson) {
+    throw new Error('Service account JSON not available in FIREBASE_SERVICE_ACCOUNT');
+  }
+
+  let sa: any;
+  try {
+    sa = typeof saJson === 'string' ? JSON.parse(saJson) : saJson;
+  } catch (err) {
+    throw new Error('Failed to parse service account JSON: ' + String(err));
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const scope = 'https://www.googleapis.com/auth/cloud-platform';
+  const claimSet = {
+    iss: sa.client_email,
+    scope,
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now,
+  };
+
+  function base64url(input: string) {
+    return Buffer.from(input)
+      .toString('base64')
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+  }
+
+  const unsignedJwt = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(claimSet))}`;
+  const signer = crypto.createSign('RSA-SHA256');
+  signer.update(unsignedJwt);
+  const signature = signer.sign(sa.private_key, 'base64');
+  const signedJwt = `${unsignedJwt}.${signature.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')}`;
+
+  // Exchange JWT for access token
+  const tokenRes = await axios.post('https://oauth2.googleapis.com/token', `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${encodeURIComponent(signedJwt)}`, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    timeout: 10000,
+  });
+
+  const accessToken = tokenRes.data?.access_token;
+  const expiresIn = tokenRes.data?.expires_in || 3600;
+  if (!accessToken) {
+    throw new Error('Failed to obtain access token from service account');
+  }
+
+  _saAccessToken = { token: accessToken, expiry: Date.now() + expiresIn * 1000 };
+  return accessToken;
 }
 
 /**
@@ -135,9 +198,10 @@ ${req.transcription}
  * Includes automatic retry logic for temporary failures (503, 429)
  */
 async function callGeminiViaREST(prompt: string, retryCount: number = 0): Promise<string> {
-  if (!clientApiKey) {
-    throw new Error('GOOGLE_API_KEY not set');
-  }
+  // This function will attempt to authenticate using, in order:
+  // 1) a provided API key (GOOGLE_API_KEY starting with 'AIza'),
+  // 2) an OAuth token provided in GOOGLE_API_KEY (starts with 'AQ' or 'ya29'),
+  // 3) a service account JSON provided in FIREBASE_SERVICE_ACCOUNT (mint a token).
 
   const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`;
 
@@ -172,7 +236,16 @@ async function callGeminiViaREST(prompt: string, retryCount: number = 0): Promis
     } else if (clientApiKey && clientApiKey.startsWith && (clientApiKey.startsWith('AQ') || clientApiKey.startsWith('ya29'))) {
       // OAuth access token - use Bearer auth
       headers['Authorization'] = `Bearer ${clientApiKey}`;
-    } else if (clientApiKey) {
+    } else if (!clientApiKey) {
+      // No API key/token provided — try service account flow
+      try {
+        const saToken = await getServiceAccountAccessToken();
+        headers['Authorization'] = `Bearer ${saToken}`;
+      } catch (err) {
+        console.warn('⚠️ Service account token acquisition failed:', err instanceof Error ? err.message : String(err));
+        // leave url as baseUrl and proceed; request will likely fail and be handled
+      }
+    } else {
       // Fallback to query param if unknown format
       url = `${baseUrl}?key=${clientApiKey}`;
     }
