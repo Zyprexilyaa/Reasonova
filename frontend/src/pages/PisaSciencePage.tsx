@@ -25,11 +25,11 @@ export const PisaSciencePage: React.FC = () => {
       <div className="pisa-shell">
         <section className="pisa-card pisa-hero">
           <div>
-            <div className="pisa-eyebrow">🔬 Science</div>
-            <h1 className="pisa-title">PISA Science practice</h1>
+            <div className="pisa-eyebrow">🔬 วิทยาศาสตร์</div>
+            <h1 className="pisa-title">ฝึก PISA วิทยาศาสตร์</h1>
             <p className="pisa-description">
               {language === 'th'
-                ? 'เลือกโจทย์ที่ต้องการทำ แล้วตอบคำถามย่อยตามภาพประกอบและเกณฑ์คะแนน เพื่อฝึกวิธีคิดแบบ PISA'
+                ? 'เลือกโจทย์ที่ต้องการทำ แล้วตอบคำถามย่อยพร้อมภาพประกอบและคะแนน เพื่อฝึกการคิดแบบ PISA'
                 : 'Choose the problem you want to answer, then work through each sub-question using images and point values to practice the PISA thinking style.'}
             </p>
           </div>

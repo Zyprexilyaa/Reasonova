@@ -131,6 +131,11 @@ function App() {
                 <PisaSciencePage />
               </ProtectedRoute>
             } />
+            <Route path="/pisa/science/unit/:unitId" element={
+              <ProtectedRoute>
+                <PisaSciencePage />
+              </ProtectedRoute>
+            } />
             <Route path="/pisa/:subject" element={
               <ProtectedRoute>
                 <PisaPlaceholderPage />
