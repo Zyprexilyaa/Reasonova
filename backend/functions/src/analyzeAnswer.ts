@@ -450,8 +450,9 @@ export async function analyzeStudentAnswer(
       console.error('Full error:', JSON.stringify(geminiError, null, 2));
       console.error('Stack:', geminiError instanceof Error ? geminiError.stack : 'N/A');
       
-      console.warn('🔄 Falling back to mock analysis');
-      return await generateMockAnalysis(req);
+      const errorMessage = geminiError instanceof Error ? geminiError.message : String(geminiError);
+      console.warn('🔄 Falling back to structured analysis message due to Gemini failure');
+      return await generateMockAnalysis(req, `Gemini analysis failed: ${errorMessage}`);
     }
   } catch (error) {
     console.error('🔴 FATAL ERROR in analyzeStudentAnswer:');
@@ -467,10 +468,15 @@ export async function analyzeStudentAnswer(
  * Use this when Gemini API is not available
  */
 export async function generateMockAnalysis(
-  req: AnalyzeAnswerRequest
+  req: AnalyzeAnswerRequest,
+  failureReason?: string
 ): Promise<AnalyzeAnswerResponse> {
   const studentAnswerId = `mock-${Date.now()}`;
   const resultId = `result-${Date.now()}`;
+
+  const fallbackFeedback = failureReason
+    ? `The AI analysis service could not complete the request. Reason: ${failureReason}. Please check the backend configuration or Gemini credentials.`
+    : 'The AI analysis service could not complete the request. Please check the backend configuration or Gemini credentials.';
 
   return {
     id: resultId,
@@ -480,8 +486,7 @@ export async function generateMockAnalysis(
     transcription: req.transcription,
     thinkingLevel: 2,
     score: 65,
-    feedback:
-      'Your answer shows some understanding of the topic but could be more detailed. Try to include more specific examples and explanations of how concepts relate to each other.',
+    feedback: fallbackFeedback,
     suggestedAnswer:
       req.referenceAnswer,
     strengths: [
