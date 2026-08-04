@@ -45,12 +45,22 @@ export interface AnalyzeAnswerResponse {
 }
 
 export interface GeminiAnalysisResult {
-  thinkingLevel: 1 | 2 | 3 | 4;
+  thinkingLevel?: 1 | 2 | 3 | 4;
+  score?: number;
+  feedback?: string;
+  suggestedAnswer?: string;
+  strengths?: string[];
+  improvements?: string[];
+}
+
+// NEW: Rubric-based scoring response from Gemini (PISA/rubric format)
+export interface RubricBasedGeminiResult {
   score: number;
-  feedback: string;
-  suggestedAnswer: string;
-  strengths: string[];
-  improvements: string[];
+  max_score?: number;
+  level: 'เต็ม' | 'บางส่วน' | 'ไม่ได้คะแนน' | 'full' | 'partial' | 'none';
+  matched_criterion: string;
+  feedback_th?: string;
+  feedback_en?: string;
 }
 
 export interface TranscriptionRequest {

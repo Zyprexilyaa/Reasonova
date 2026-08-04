@@ -5,6 +5,7 @@ import {
   AnalyzeAnswerRequest,
   AnalyzeAnswerResponse,
   GeminiAnalysisResult,
+  RubricBasedGeminiResult,
 } from './types';
 import { saveAnalysisResult, saveStudentAnswer, saveAnswerWithCriteria } from './database';
 import { transcribeAudioFile } from './transcribeAudio';
@@ -138,7 +139,7 @@ async function callGeminiViaREST(prompt: string, retryCount: number = 0): Promis
     throw new Error('GOOGLE_API_KEY not set');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${clientApiKey}`;
+  const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`;
 
   const payload = {
     contents: [
@@ -158,11 +159,26 @@ async function callGeminiViaREST(prompt: string, retryCount: number = 0): Promis
     } else {
       console.log(`📊 Retrying Gemini API (attempt ${retryCount + 1}/4)...`);
     }
-    
+
+    // Support both traditional API keys (AIza...) and OAuth access tokens (AQ..., ya29...)
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    let url = baseUrl;
+    if (clientApiKey && clientApiKey.startsWith && clientApiKey.startsWith('AIza')) {
+      // API key usage via query param
+      url = `${baseUrl}?key=${clientApiKey}`;
+    } else if (clientApiKey && clientApiKey.startsWith && (clientApiKey.startsWith('AQ') || clientApiKey.startsWith('ya29'))) {
+      // OAuth access token - use Bearer auth
+      headers['Authorization'] = `Bearer ${clientApiKey}`;
+    } else if (clientApiKey) {
+      // Fallback to query param if unknown format
+      url = `${baseUrl}?key=${clientApiKey}`;
+    }
+
     const response = await axios.post(url, payload, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       timeout: 30000 // 30s timeout
     });
 
@@ -246,29 +262,77 @@ export async function analyzeStudentAnswer(
       console.log('📝 After cleanup (first 300 chars):', cleanedText.substring(0, 300));
 
       // Parse the JSON response
-      let analysisResult: GeminiAnalysisResult;
+      let analysisResult: GeminiAnalysisResult | RubricBasedGeminiResult;
       try {
-        analysisResult = JSON.parse(cleanedText) as GeminiAnalysisResult;
+        analysisResult = JSON.parse(cleanedText);
         console.log('✅ JSON parsed successfully');
       } catch (parseError) {
         console.error('❌ JSON parse error:', parseError);
         console.error('❌ Failed to parse:', cleanedText.substring(0, 500));
         throw parseError;
       }
-      console.log('✅ Analysis result - Level:', analysisResult.thinkingLevel, 'Score:', analysisResult.score);
+
+      // Detect which format we received
+      const isRubricBased = 'matched_criterion' in analysisResult;
+      
+      if (isRubricBased) {
+        console.log('📊 Received rubric-based scoring format');
+        const rubricResult = analysisResult as RubricBasedGeminiResult;
+        
+        // Map rubric-based format to legacy format for compatibility
+        const mappedResponse: AnalyzeAnswerResponse = {
+          id: `analysis-${Date.now()}`,
+          studentAnswerId: `answer-${Date.now()}`,
+          studentId: req.studentId,
+          questionId: req.questionId,
+          transcription: req.transcription,
+          thinkingLevel: rubricResult.score >= (rubricResult.max_score || 100) * 0.8 ? 4 : rubricResult.score >= (rubricResult.max_score || 100) * 0.5 ? 2 : 1,
+          score: rubricResult.score,
+          feedback: rubricResult.feedback_th || rubricResult.feedback_en || rubricResult.matched_criterion,
+          suggestedAnswer: req.referenceAnswer,
+          strengths: rubricResult.matched_criterion ? [rubricResult.matched_criterion] : [],
+          improvements: [],
+          analysisTimestamp: new Date().toISOString(),
+        };
+
+        // Save to Firestore in background
+        console.log('💾 Saving rubric-based analysis to Firestore (background)...');
+        saveAnalysisResult(mappedResponse).catch((error) => {
+          console.warn('⚠️ Warning: Failed to save to Firestore:', error);
+        });
+
+        if (req.proposition) {
+          saveAnswerWithCriteria(
+            req.studentId,
+            req.proposition,
+            req.transcription,
+            JSON.stringify(rubricResult),
+            rubricResult.score
+          ).catch((error) => {
+            console.warn('⚠️ Warning: Failed to save answer with criteria:', error);
+          });
+        }
+
+        return mappedResponse;
+      }
+
+      // Handle legacy Bloom's taxonomy format
+      console.log('📊 Received legacy Bloom\'s taxonomy format');
+      const legacyResult = analysisResult as GeminiAnalysisResult;
+      console.log('✅ Analysis result - Level:', legacyResult.thinkingLevel, 'Score:', legacyResult.score);
 
       // Validate the response
       if (
-        !analysisResult.thinkingLevel ||
-        analysisResult.score === undefined ||
-        !analysisResult.feedback ||
-        !analysisResult.suggestedAnswer
+        !legacyResult.thinkingLevel ||
+        legacyResult.score === undefined ||
+        !legacyResult.feedback ||
+        !legacyResult.suggestedAnswer
       ) {
         console.warn('⚠️ Invalid analysis result structure from Gemini, using fallback');
         throw new Error('Invalid analysis result from Gemini');
       }
 
-      console.log('✅ Gemini analysis successful - Level:', analysisResult.thinkingLevel, 'Score:', analysisResult.score);
+      console.log('✅ Gemini analysis successful - Level:', legacyResult.thinkingLevel, 'Score:', legacyResult.score);
 
       // Build response immediately (don't wait for Firestore saves)
       const responseData = {
@@ -277,12 +341,12 @@ export async function analyzeStudentAnswer(
         studentId: req.studentId,
         questionId: req.questionId,
         transcription: req.transcription,
-        thinkingLevel: analysisResult.thinkingLevel,
-        score: analysisResult.score,
-        feedback: analysisResult.feedback,
-        suggestedAnswer: analysisResult.suggestedAnswer,
-        strengths: analysisResult.strengths || [],
-        improvements: analysisResult.improvements || [],
+        thinkingLevel: legacyResult.thinkingLevel,
+        score: legacyResult.score,
+        feedback: legacyResult.feedback,
+        suggestedAnswer: legacyResult.suggestedAnswer,
+        strengths: legacyResult.strengths || [],
+        improvements: legacyResult.improvements || [],
         analysisTimestamp: new Date().toISOString(),
       };
 
