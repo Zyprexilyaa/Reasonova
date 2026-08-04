@@ -26,7 +26,7 @@ if (!clientApiKey) {
 // Service account access token cache
 let _saAccessToken: { token: string; expiry: number } | null = null;
 
-async function getServiceAccountAccessToken(): Promise<string> {
+export async function getServiceAccountAccessToken(): Promise<string> {
   // Return cached token if still valid (with 60s buffer)
   if (_saAccessToken && Date.now() < _saAccessToken.expiry - 60000) {
     return _saAccessToken.token;

@@ -4,7 +4,7 @@ dotenv.config({ path: '.env.local' });
 
 import express, { Request, Response } from 'express';
 import { AnalyzeAnswerRequest, AnalyzeAnswerResponse } from './types';
-import { analyzeStudentAnswer, generateMockAnalysis } from './analyzeAnswer';
+import { analyzeStudentAnswer, generateMockAnalysis, getServiceAccountAccessToken } from './analyzeAnswer';
 import { transcribeAudioFile } from './transcribeAudio';
 import { TranscriptionResponse } from './types';
 import { getUserAnswerHistory, saveExamQuestion, getExamQuestions, deleteExamQuestions, backendInitInfo, db } from './database';
@@ -250,6 +250,16 @@ app.get('/health', (req: Request, res: Response) => {
     status: 'ok',
     message: 'Reasonova Backend is running',
   });
+
+// Debug endpoint: get service account access token (for testing only)
+app.get('/debug/saToken', async (_req: Request, res: Response) => {
+  try {
+    const token = await getServiceAccountAccessToken();
+    res.status(200).json({ ok: true, tokenPreview: token ? token.substring(0, 10) + '...' : null });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+  }
+});
 });
 
 // Export the Express app for functions-framework
