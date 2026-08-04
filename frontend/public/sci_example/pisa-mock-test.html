@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบทดสอบจำลอง PISA/TIMSS วิทยาศาสตร์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF0F4;
+    --sheet:#FFFFFF;
+    --ink:#16233B;
+    --ink-soft:#4C5A72;
+    --rule:#C9D0DC;
+    --accent:#1F3A5F;
+    --accent-2:#B23A48;
+    --gold:#B4802A;
+    --good:#276749;
+    --good-bg:#E7F3EC;
+    --bad:#9B2C2C;
+    --bad-bg:#FBE9E9;
+    --ai:#7A4FB5;
+    --ai-bg:#F1EBFB;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--rule) 1px, transparent 1px);
+    background-size: 100% 42px;
+    font-family:'Sarabun',sans-serif;
+    color:var(--ink);
+    padding:0 0 80px;
+  }
+  .topbar{
+    background:var(--accent);
+    color:#fff;
+    padding:22px 24px;
+    position:sticky;
+    top:0;
+    z-index:50;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+  }
+  .topbar-inner{
+    max-width:920px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .topbar h1{
+    font-size:19px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+  .topbar .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:1.5px;
+    opacity:.75;
+    text-transform:uppercase;
+  }
+  .progress-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+  }
+  .progress-bar{
+    width:140px;
+    height:6px;
+    background:rgba(255,255,255,.25);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:#E9C46A;
+    width:0%;
+    transition:width .3s ease;
+  }
+  .container{
+    max-width:920px;
+    margin:0 auto;
+    padding:32px 20px;
+  }
+  .intro-card{
+    background:var(--sheet);
+    border:1px solid var(--rule);
+    border-left:5px solid var(--accent);
+    border-radius:var(--radius);
+    padding:20px 24px;
+    margin-bottom:28px;
+    font-size:14.5px;
+    line-height:1.75;
+    color:var(--ink-soft);
+  }
+  .intro-card b{color:var(--ink);}
+  .legend{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:14px;
+    font-size:12.5px;
+  }
+  .legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .dot.auto{background:var(--good);}
+  .dot.ai{background:var(--ai);}
+  .dot.img{background:var(--gold);}
+
+  .section{
+    background:var(--sheet);
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    margin-bottom:24px;
+    overflow:hidden;
+    box-shadow:0 1px 3px rgba(22,35,59,.06);
+  }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    padding:16px 22px;
+    background:linear-gradient(180deg,#F7F8FA,#EFF1F5);
+    border-bottom:1px solid var(--rule);
+  }
+  .section-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--gold);
+    font-weight:700;
+    letter-spacing:1px;
+  }
+  .section-head h2{
+    margin:0;
+    font-size:18px;
+    font-weight:700;
+  }
+  .passage{
+    padding:18px 22px;
+    font-size:14px;
+    line-height:1.85;
+    color:var(--ink-soft);
+    border-bottom:1px dashed var(--rule);
+    white-space:pre-line;
+  }
+  .img-slot{
+    margin:14px 0;
+    border:2px dashed var(--gold);
+    background:#FBF4E5;
+    border-radius:8px;
+    padding:18px;
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--gold);
+    line-height:1.7;
+  }
+  .img-slot b{display:block;font-size:13px;color:#8a611c;margin-bottom:4px;}
+
+  .question{
+    padding:20px 22px;
+    border-bottom:1px solid var(--rule);
+  }
+  .question:last-child{border-bottom:none;}
+  .q-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .q-title{
+    font-weight:600;
+    font-size:15px;
+  }
+  .badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    padding:3px 9px;
+    border-radius:20px;
+    white-space:nowrap;
+    font-weight:700;
+    letter-spacing:.4px;
+  }
+  .badge.auto{background:var(--good-bg);color:var(--good);}
+  .badge.ai{background:var(--ai-bg);color:var(--ai);}
+
+  .options label{
+    display:block;
+    padding:9px 12px;
+    margin-bottom:7px;
+    border:1px solid var(--rule);
+    border-radius:8px;
+    cursor:pointer;
+    font-size:14px;
+    transition:.15s;
+  }
+  .options label:hover{border-color:var(--accent);background:#F5F7FA;}
+  .options input{margin-right:8px;}
+  .options label.correct-ans{border-color:var(--good);background:var(--good-bg);}
+  .options label.wrong-ans{border-color:var(--bad);background:var(--bad-bg);}
+
+  table.grid-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    margin-top:6px;
+  }
+  table.grid-table th{
+    text-align:left;
+    background:#F3F4F7;
+    padding:8px 10px;
+    border:1px solid var(--rule);
+    font-weight:600;
+  }
+  table.grid-table td{
+    padding:8px 10px;
+    border:1px solid var(--rule);
+  }
+  table.grid-table td.opts{white-space:nowrap;}
+  table.grid-table label{margin-right:14px;cursor:pointer;}
+  tr.row-correct td{background:var(--good-bg);}
+  tr.row-wrong td{background:var(--bad-bg);}
+
+  textarea{
+    width:100%;
+    min-height:90px;
+    border:1px solid var(--rule);
+    border-radius:8px;
+    padding:10px 12px;
+    font-family:'Sarabun',sans-serif;
+    font-size:14px;
+    resize:vertical;
+  }
+  .rubric-toggle{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--ai);
+    cursor:pointer;
+    display:inline-block;
+    font-weight:600;
+  }
+  .rubric-box{
+    display:none;
+    margin-top:8px;
+    background:var(--ai-bg);
+    border:1px solid #D9CBEF;
+    border-radius:8px;
+    padding:12px 14px;
+    font-size:12.5px;
+    line-height:1.7;
+    color:#4a2f78;
+  }
+  .rubric-box.show{display:block;}
+  .rubric-box .col{margin-bottom:8px;}
+  .rubric-box .col b{display:block;color:#3a2360;margin-bottom:3px;}
+  .ai-btn{
+    margin-top:10px;
+    background:var(--ai);
+    color:#fff;
+    border:none;
+    padding:9px 16px;
+    border-radius:20px;
+    font-family:'Sarabun',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .ai-btn:disabled{opacity:.55;cursor:progress;}
+  .ai-result{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:13px;
+    display:none;
+  }
+  .ai-result.show{display:block;}
+  .ai-result.full{background:var(--good-bg);color:var(--good);}
+  .ai-result.partial{background:#FFF6E0;color:#8a611c;}
+  .ai-result.none{background:var(--bad-bg);color:var(--bad);}
+  .ai-note{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:#8a75ab;
+    margin-top:6px;
+  }
+
+  .check-row{
+    display:flex;
+    justify-content:flex-end;
+    padding:8px 22px 18px;
+  }
+  .check-btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:8px 18px;
+    border-radius:20px;
+    font-family:'Sarabun',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .check-btn:hover{background:#16304f;}
+  .fb{
+    margin-top:10px;
+    font-size:13px;
+    font-weight:600;
+  }
+  .fb.correct{color:var(--good);}
+  .fb.wrong{color:var(--bad);}
+
+  .footer-bar{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 20px;
+  }
+  .submit-card{
+    background:var(--sheet);
+    border:1px solid var(--rule);
+    border-radius:var(--radius);
+    padding:24px;
+    text-align:center;
+  }
+  .submit-btn{
+    background:var(--accent-2);
+    color:#fff;
+    border:none;
+    padding:14px 34px;
+    border-radius:30px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Sarabun',sans-serif;
+  }
+  .submit-btn:hover{background:#8f2c38;}
+  .score-summary{
+    margin-top:18px;
+    display:none;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .score-summary.show{display:block;}
+  .score-big{
+    font-size:36px;
+    font-weight:700;
+    color:var(--accent);
+  }
+  .score-note{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div>
+      <div class="eyebrow">PISA / TIMSS · Science Sample Items</div>
+      <h1>แบบทดสอบจำลองวิทยาศาสตร์</h1>
+    </div>
+    <div class="progress-wrap">
+      <span id="progressLabel">ตอบแล้ว 0/18</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="intro-card">
+    สร้างจากคลังข้อสอบตัวอย่าง PISA/TIMSS ที่แนบมา ครอบคลุม 7 บทอ่าน/สถานการณ์ — ข้อที่ตอบแบบ<b>เลือกตอบ</b>และ<b>ตาราง ใช่/ไม่ใช่</b>
+    ระบบตรวจให้อัตโนมัติทันที ส่วนข้อที่ต้อง<b>เขียนคำตอบอิสระ</b> (constructed response) ระบบนี้แสดงเป็น<b>จุดเชื่อมสำหรับ AI ตรวจ</b> — ให้ดึงคำตอบนักเรียน + เกณฑ์การให้คะแนน (คะแนนเต็ม/ไม่มีคะแนน ที่แนบไว้ในโค้ด) ไปประมวลผลผ่าน AI API ในระบบเต็มของคุณ
+    (ในไฟล์นี้มีปุ่มสาธิตการเรียก Claude API ไว้ให้ดูโครงสร้าง แต่ตัวจริงควรต่อผ่าน backend ของคุณเอง)
+    <div class="legend">
+      <span><span class="dot auto"></span> ตรวจอัตโนมัติ</span>
+      <span><span class="dot ai"></span> ต้องใช้ AI/คนตรวจ</span>
+      <span><span class="dot img"></span> ต้องแทรกภาพ/กราฟ</span>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="footer-bar">
+    <div class="submit-card">
+      <button class="submit-btn" id="submitAllBtn">ส่งคำตอบทั้งหมด &amp; ดูคะแนนรวม</button>
+      <div class="score-summary" id="scoreSummary">
+        <div class="score-big" id="scoreBig">0 / 0</div>
+        <div class="score-note">คะแนนจากข้อตรวจอัตโนมัติเท่านั้น — ข้อ AI-graded ต้องกด "ให้ AI ตรวจ" ในแต่ละข้อก่อน จึงจะรวมคะแนนได้ครบ</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   PISA/TIMSS Mock Test — item bank
+   type: 'mcq' | 'table' | 'open'
+   AI-graded ('open') items carry rubricFull / rubricNone text
+   taken directly from the answer key in the source PDF, so a
+   real AI-grading call can use them as the grading prompt.
+   ============================================================ */
+const sections = [
+{
+  title: "ปรากฏการณ์เรือนกระจก",
+  passage: `อ่านบทความสรุป: พลังงานจากดวงอาทิตย์ส่วนใหญ่ผ่านบรรยากาศโลกไป บางส่วนถูกดูดซับและสะท้อนกลับ ถ้าไม่มีบรรยากาศ อุณหภูมิพื้นผิวโลกจะสูงกว่านี้มาก — ปรากฏการณ์นี้เรียกว่า "ปรากฏการณ์เรือนกระจก"
+นักเรียนคนหนึ่งชื่ออัจฉริยะ ค้นกราฟ 2 รูปจากห้องสมุด: (1) ปริมาณคาร์บอนไดออกไซด์ที่ถูกปล่อยออกมา พ.ศ. 1860-1990 และ (2) อุณหภูมิเฉลี่ยของบรรยากาศโลก ปี ค.ศ. 1860-1990 แล้วสรุปว่า "อุณหภูมิเฉลี่ยของบรรยากาศโลกที่สูงขึ้น เป็นเพราะคาร์บอนไดออกไซด์ถูกปล่อยออกมามากขึ้น"`,
+  imageSlots: [
+    "กราฟที่ 1 — ปริมาณคาร์บอนไดออกไซด์ที่ถูกปล่อยออกมา (พันล้านตัน/ปี) แกน X: ปี ค.ศ. 1860-1990  [ต้นฉบับหน้า 25 บนของไฟล์ PDF]",
+    "กราฟที่ 2 — อุณหภูมิเฉลี่ยของบรรยากาศโลก (°C) แกน X: ปี ค.ศ. 1860-1990  [ต้นฉบับหน้า 25 ล่างของไฟล์ PDF]"
+  ],
+  questions: [
+    {
+      id:"gh1", type:"open", points:1,
+      text:"คำถามที่ 1: ข้อมูลส่วนใดของกราฟที่สนับสนุนการสรุปของอัจฉริยะ?",
+      rubricFull:["อ้างถึงการเพิ่มขึ้นของอุณหภูมิและคาร์บอนไดออกไซด์ (โดยเฉลี่ย) ไปด้วยกัน เช่น กราฟทั้งสองเพิ่มขึ้นเรื่อยๆ / เส้นกราฟสูงขึ้นไปด้วยกัน / ยิ่งปล่อยคาร์บอนไดออกไซด์มากขึ้นอุณหภูมิก็จะสูงขึ้นด้วย"],
+      rubricNone:["อ้างถึงการเพิ่มขึ้นของอุณหภูมิเพียงอย่างเดียว หรือปล่อยก๊าซคาร์บอนไดออกไซด์เพียงอย่างเดียว โดยไม่เชื่อมโยงทั้งสองกราฟเข้าด้วยกัน / อธิบายกว้างเกินไปไม่อ้างอิงข้อมูลกราฟจริง"]
+    },
+    {
+      id:"gh2", type:"open", points:1,
+      text:"คำถามที่ 2: จินตนา ไม่เห็นด้วยกับข้อสรุปของอัจฉริยะ โดยบอกว่ามีกราฟบางส่วนไม่สนับสนุนข้อสรุป จงยกตัวอย่างว่ากราฟส่วนใดไม่สนับสนุน พร้อมอธิบาย",
+      rubricFull:["อ้างถึงช่วงเวลาที่ถูกต้องพร้อมอธิบาย เช่น CO2 ปี 1900-1910 เพิ่มขึ้นแต่อุณหภูมิในช่วงเวลานั้นลดลง / อุณหภูมิระหว่างปี 1950-1980 ไม่เพิ่มตามปริมาณ CO2 ที่เพิ่ม"],
+      rubricNone:["กล่าวถึงช่วงเวลาถูกต้องแต่ไม่อธิบาย หรือกล่าวถึงความแตกต่างของกราฟโดยไม่ระบุช่วงเวลาที่ชัดเจน"]
+    },
+    {
+      id:"gh3", type:"open", points:1,
+      text:"คำถามที่ 3: จงบอกปัจจัยอื่น (นอกจากคาร์บอนไดออกไซด์) ที่อาจมีผลต่ออุณหภูมิเฉลี่ยของบรรยากาศโลก มา 1 อย่าง",
+      rubricFull:["ปัจจัยเกี่ยวกับพลังงาน/การแผ่รังสีจากดวงอาทิตย์ (เช่น ดวงอาทิตย์ร้อนขึ้น) หรือ ปัจจัยองค์ประกอบทางธรรมชาติ/มลภาวะ (เช่น ไอน้ำในอากาศ, เมฆ, ภูเขาไฟระเบิด, มลภาวะทางอากาศ, CFC, จำนวนรถยนต์, โอโซน)"],
+      rubricNone:["บอกสาเหตุที่ทำให้ความเข้มข้นของคาร์บอนไดออกไซด์เพิ่มขึ้น (เช่น การทำลายป่าไม้) หรือปัจจัยกว้างๆ ที่ไม่เฉพาะเจาะจง (เช่น ปุ๋ย, สเปรย์, สภาพดินฟ้าอากาศเป็นมา)"]
+    }
+  ]
+},
+{
+  title: "เสื้อผ้า",
+  passage: `นักวิทยาศาสตร์ชาวอังกฤษพัฒนาผ้า "ฉลาด" สำหรับเด็กพิการให้สื่อสารด้วย "คำพูด" ผ้านี้ทอด้วยเส้นใยพิเศษที่นำไฟฟ้าได้ เชื่อมต่อกับเครื่องสังเคราะห์เสียง สัญญาณถูกส่งผ่านเส้นใย แปลงเป็นสัญญาณ ชิพคอมพิวเตอร์อ่านตำแหน่งที่ถูกแตะบนผ้า แล้วสั่งงานอุปกรณ์อิเล็กทรอนิกส์ ผ้าซัก บิด ห่อหุ้มได้โดยไม่เสียหาย และผลิตได้จำนวนมากในราคาถูก`,
+  imageSlots: [],
+  questions: [
+    {
+      id:"cl1", type:"table", points:1, allOrNothing:true,
+      text:"คำถามที่ 1: คำกล่าวอ้างต่อไปนี้สามารถทดสอบในห้องปฏิบัติการได้หรือไม่",
+      choices:["ได้","ไม่ได้"],
+      rows:[
+        {label:"ซักได้โดยไม่เกิดความเสียหาย", correct:"ได้"},
+        {label:"ห่อหุ้มสิ่งต่างๆ ได้โดยไม่เกิดความเสียหาย", correct:"ได้"},
+        {label:"บิดได้โดยไม่เกิดความเสียหาย", correct:"ได้"},
+        {label:"ผลิตเป็นจำนวนมากได้ในราคาถูก", correct:"ไม่ได้"}
+      ]
+    },
+    {
+      id:"cl2", type:"mcq", points:1,
+      text:"คำถามที่ 2: เครื่องมือชนิดใดในห้องปฏิบัติการ ที่ใช้ตรวจสอบว่า ผ้าที่ทอขึ้นนำไฟฟ้าได้",
+      options:["โวลต์มิเตอร์ (Voltmeter)","กล่องแสง (Light box)","ไมโครมิเตอร์ (Micrometer)","เครื่องวัดเสียง (Sound meter)"],
+      correct:0
+    }
+  ]
+},
+{
+  title: "การสูบยา",
+  passage: `ควันบุหรี่ ซิการ์ และกล้องสูบยา ทำให้เสียชีวิตทั่วโลกราว 13,500 คนต่อวัน และคาดว่าปี 2020 โรคจากยาสูบจะทำให้คนตายราว 12% ของการตายทั้งหมด สารในควันที่อันตรายที่สุดคือ น้ำมันดิน นิโคติน และคาร์บอนมอนอกไซด์`,
+  imageSlots: [],
+  questions: [
+    {
+      id:"sm1", type:"mcq", points:1,
+      text:"คำถามที่ 1: ควันของยาสูบถูกสูดเข้าไปยังปอด น้ำมันดินจากควันจะเกาะอยู่ที่ปอดและทำให้ปอดทำงานไม่ได้อย่างเต็มที่ ข้อความใดต่อไปนี้เป็นหน้าที่ของปอด",
+      options:["สูบฉีดโลหิตไปยังส่วนต่างๆ ของร่างกาย","แลกเปลี่ยนออกซิเจนจากอากาศที่หายใจไปสู่เลือด","ทำให้เลือดบริสุทธิ์โดยขจัดคาร์บอนไดออกไซด์จนเป็นศูนย์","เปลี่ยนไขมันเลกุลของคาร์บอนไดออกไซด์ให้เป็นไขมันของออกซิเจน"],
+      correct:1
+    },
+    {
+      id:"sm2", type:"table", points:1, allOrNothing:true,
+      text:"คำถามที่ 2: ความเสี่ยงในการเกิดโรคต่อไปนี้ เพิ่มขึ้นจากการสูบยาสูบหรือไม่",
+      choices:["ใช่","ไม่ใช่"],
+      rows:[
+        {label:"โรคถุงลมโป่งพอง", correct:"ใช่"},
+        {label:"โรคภูมิคุ้มกันบกพร่อง/โรคเอดส์", correct:"ไม่ใช่"},
+        {label:"โรคอีสุกอีใส", correct:"ไม่ใช่"}
+      ]
+    },
+    {
+      id:"sm3", type:"mcq", points:1,
+      text:"คำถามที่ 3: การออกแบบการทดลองใดต่อไปนี้ ดีที่สุด สำหรับศึกษาแผ่นนิโคตินช่วยเลิกสูบยา",
+      options:["ทุกคนในกลุ่มติดแผ่นนิโคติน","ทุกคนติดแผ่นนิโคตินยกเว้นหนึ่งคนที่พยายามเลิกสูบยาโดยไม่ใช้แผ่นนิโคติน","แต่ละคนเลือกเองว่าจะติดหรือไม่ติดแผ่นนิโคตินเพื่อช่วยเลิกสูบยาก็ได้","สุ่มคนครึ่งหนึ่งให้ใช้แผ่นนิโคตินและอีกครึ่งหนึ่งไม่ใช้"],
+      correct:3
+    },
+    {
+      id:"sm4", type:"table", points:1, allOrNothing:true,
+      text:"คำถามที่ 4: วิธีการต่อไปนี้ใช้เทคโนโลยีเป็นพื้นฐานทางการลดสูบบุหรี่หรือไม่",
+      choices:["ใช่","ไม่ใช่"],
+      rows:[
+        {label:"ขึ้นราคาบุหรี่", correct:"ไม่ใช่"},
+        {label:"ผลิตแผ่นนิโคตินเพื่อช่วยให้ดนเลิกสูบบุหรี่", correct:"ใช่"},
+        {label:"ห้ามสูบบุหรี่ในบริเวณที่สาธารณะ", correct:"ไม่ใช่"}
+      ]
+    }
+  ]
+},
+{
+  title: "แสงของดาว",
+  passage: `ธงชัยชอบดูดาว แต่มองเห็นดาวได้ชัดในเมืองใหญ่ยาก เมื่อไปเที่ยวชนบทและปีนขึ้นเขา เขาสังเกตเห็นดาวจำนวนมากกว่าที่เห็นในเมือง`,
+  imageSlots: [],
+  questions: [
+    {
+      id:"st1", type:"mcq", points:1,
+      text:"คำถามที่ 1: ทำไมจึงสามารถมองเห็นดาวได้เป็นจำนวนมากในชนบทเมื่อเทียบกับในเมืองใหญ่",
+      options:["ในเมืองมีดวงจันทร์ที่สว่างกว่าและบดบังแสงจากดาวอื่นๆ","ในชนบทมีฝุ่นอยู่ในอากาศมากจึงสะท้อนแสงได้ดีกว่าในเมือง","ความสว่างของแสงไฟในเมืองทำให้มองเห็นดาวได้ยาก","อากาศในเมืองอบอุ่นกว่าเนื่องจากการปล่อยความร้อนจากรถยนต์ เครื่องจักร และบ้านเรือน"],
+      correct:2
+    },
+    {
+      id:"st2", type:"mcq", points:1,
+      text:"คำถามที่ 2: ทำไมการใช้กล้องโทรทรรศน์ที่เลนส์มีเส้นผ่านศูนย์กลางขนาดใหญ่ จึงทำให้สังเกตเห็นดาวที่มีความสว่างน้อยได้",
+      options:["เลนส์ที่มีขนาดใหญ่ขึ้นจะรับแสงได้มากขึ้น","เลนส์ที่มีขนาดใหญ่ขึ้นจะมีกำลังขยายมากขึ้น","เลนส์ขนาดใหญ่จะทำให้มองเห็นท้องฟ้าได้มากขึ้น","เลนส์ขนาดใหญ่จะสามารถรับสีเข้มจากดาวได้"],
+      correct:0
+    }
+  ]
+},
+{
+  title: "ลิปมัน",
+  passage: `ตารางแสดงส่วนผสมที่แตกต่างกันของเครื่องสำอาง 2 สูตร (ลิปมันและลิปสติก) ที่นักเรียนทำเองได้ ลิปสติกจะแข็งกว่าลิปมันซึ่งอ่อนและเป็นมันกว่า (ลิปมัน: น้ำมันละหุ่ง 5 กรัม, ไขผึ้ง 0.2 กรัม, ไขมันปาล์ม 0.2 กรัม / ลิปสติก: น้ำมันละหุ่ง 5 กรัม, ไขผึ้ง 1 กรัม, ไขมันปาล์ม 1 กรัม — ทั้งสองสูตรเติมสีผสมอาหารและสารแต่งรสชาติ)`,
+  imageSlots: [],
+  questions: [
+    {
+      id:"lb1", type:"open", points:1,
+      text:"คำถามที่ 1: นักเรียนจะเปลี่ยนสัดส่วนของส่วนผสมอย่างไร เพื่อทำให้ลิปสติกอ่อนลงกว่าเดิม",
+      rubricFull:["คำตอบที่แสดงว่าจะใส่ไขน้อยลง และ/หรือ ใส่น้ำมันเพิ่มขึ้น เช่น ลดปริมาณไขผึ้งและไขมันปาล์มลงเล็กน้อย / เติมน้ำมันละหุ่งมากขึ้น"],
+      rubricNone:["คำตอบอื่นๆ เช่น อุ่นของผสมให้นานขึ้นเพื่อให้อ่อนลง (ไม่ได้เปลี่ยนสัดส่วนส่วนผสม)"]
+    },
+    {
+      id:"lb2", type:"mcq", points:1,
+      text:"คำถามที่ 2: น้ำมันและไขเป็นสารที่ผสมกันได้อย่างดี น้ำมันไม่ผสมกับน้ำและไขก็ไม่ละลายในน้ำ ข้อใดต่อไปนี้จะเกิดขึ้นได้มากที่สุด ถ้าน้ำจำนวนมากหลงในส่วนผสมของลิปสติกในขณะกำลังอุ่น",
+      options:["ได้ของผสมที่มันและอ่อนตัวกว่า","ของผสมจับตัวกันแน่นขึ้น","ของผสมแทบจะไม่เปลี่ยนไปเลย","มีก้อนไขมันลอยอยู่เหนือน้ำ"],
+      correct:3
+    },
+    {
+      id:"lb3", type:"mcq", points:1,
+      text:"คำถามที่ 3: เมื่อเติมสารที่เรียกว่าอิมัลซิฟายเออร์ลงไปจะทำให้น้ำมันและไขผสมกับน้ำได้ ทำไมสบู่และน้ำจึงสามารถกลบลิปสติกออกได้",
+      options:["น้ำมีอิมัลซิฟายเออร์ที่ทำให้สบู่และลิปสติกผสมกันได้","สบู่ทำหน้าที่เป็นอิมัลซิฟายเออร์ ทำให้น้ำและลิปสติกผสมกันได้","อิมัลซิฟายเออร์ในลิปสติกทำให้สบู่และน้ำผสมกันได้","สบู่และลิปสติกผสมกันจนอิมัลซิฟายเออร์ที่ผสมกับน้ำได้"],
+      correct:1
+    }
+  ]
+},
+{
+  title: "การออกกำลังกาย",
+  passage: `การออกกำลังกายอย่างสม่ำเสมอแต่พอประมาณเป็นสิ่งที่ดีสำหรับสุขภาพ`,
+  imageSlots: [],
+  questions: [
+    {
+      id:"ex1", type:"table", points:1, allOrNothing:true,
+      text:"คำถามที่ 1: ต่อไปนี้เป็นข้อดีของการออกกำลังกายอย่างสม่ำเสมอใช่หรือไม่",
+      choices:["ใช่","ไม่ใช่"],
+      rows:[
+        {label:"การออกกำลังกายช่วยป้องกันโรคหัวใจและโรคที่เกิดจากการไหลเวียนโลหิต", correct:"ใช่"},
+        {label:"การออกกำลังกายนำไปสู่การกินอาหารที่ดีต่อสุขภาพ", correct:"ไม่ใช่"},
+        {label:"การออกกำลังกายช่วยหลีกเลี่ยงการมีน้ำหนักมากเกินไป", correct:"ใช่"}
+      ]
+    },
+    {
+      id:"ex2", type:"table", points:1, allOrNothing:true,
+      text:"คำถามที่ 2: มีอะไรเกิดขึ้นเมื่อกล้ามเนื้อได้ออกกำลัง",
+      choices:["ใช่","ไม่ใช่"],
+      rows:[
+        {label:"กล้ามเนื้อมีเลือดไหลเวียนมากขึ้น", correct:"ใช่"},
+        {label:"ไขมันเกิดขึ้นในกล้ามเนื้อ", correct:"ไม่ใช่"}
+      ]
+    },
+    {
+      id:"ex3", type:"open", points:1,
+      text:"คำถามที่ 3: ทำไมขณะที่กำลังออกกำลังกายจึงต้องหายใจแรงกว่าขณะที่กำลังพักผ่อน",
+      rubricFull:["คำตอบที่หมายความว่าเพื่อกำจัดคาร์บอนไดออกไซด์ที่มีระดับเพิ่มขึ้น และให้ออกซิเจนกับร่างกายมากขึ้น (ไม่ยอมรับคำตอบที่ใช้คำว่า 'อากาศ' แทน 'คาร์บอนไดออกไซด์' หรือ 'ออกซิเจน') เช่น เมื่อออกกำลังกาย ร่างกายต้องการออกซิเจนมากขึ้นและสร้างคาร์บอนไดออกไซด์มากขึ้น การหายใจเร็วขึ้นทำให้ได้รับออกซิเจนเข้าสู่กระแสโลหิตเพิ่มขึ้นและคาร์บอนไดออกไซด์ถูกกำจัดมากขึ้น"],
+      rubricNone:["คำตอบอื่นๆ เช่น อากาศเข้าสู่ปอดมากขึ้น (ไม่ระบุ O2/CO2) / เพราะกล้ามเนื้อใช้พลังงานมากขึ้น (ไม่เจาะจงพอ) / เพราะหัวใจของคุณเต้นเร็วขึ้น / ร่างกายของคุณต้องการออกซิเจน (ไม่ได้อ้างถึงความต้องการที่เพิ่มขึ้น)"]
+    }
+  ]
+}
+];
+
+/* ============================================================
+   Render
+   ============================================================ */
+const root = document.getElementById('sections');
+let totalClosed = 0, answeredClosed = new Set();
+
+sections.forEach((sec, si) => {
+  const secEl = document.createElement('div');
+  secEl.className = 'section';
+
+  let html = `<div class="section-head">
+      <span class="section-num">บทที่ ${String(si+1).padStart(2,'0')}</span>
+      <h2>${sec.title}</h2>
+    </div>`;
+
+  if (sec.passage) {
+    html += `<div class="passage">${sec.passage}</div>`;
+  }
+  (sec.imageSlots||[]).forEach(slot=>{
+    html += `<div class="img-slot"><b>🖼 ต้องแทรกภาพตรงนี้</b>${slot}</div>`;
+  });
+
+  sec.questions.forEach(q=>{
+    if(q.type!=='open') totalClosed++;
+
+    html += `<div class="question" id="q-${q.id}">
+      <div class="q-head">
+        <div class="q-title">${q.text}</div>
+        ${q.type==='open'
+          ? `<span class="badge ai">🤖 AI ตรวจ</span>`
+          : `<span class="badge auto">✓ ตรวจอัตโนมัติ</span>`}
+      </div>`;
+
+    if (q.type === 'mcq') {
+      html += `<div class="options">`;
+      q.options.forEach((opt,i)=>{
+        html += `<label><input type="radio" name="${q.id}" value="${i}"> ${opt}</label>`;
+      });
+      html += `</div>
+        <div class="check-row"><button class="check-btn" onclick="checkMCQ('${q.id}')">ตรวจคำตอบ</button></div>
+        <div class="fb" id="fb-${q.id}"></div>`;
+    }
+
+    if (q.type === 'table') {
+      html += `<table class="grid-table"><thead><tr><th>ข้อความ</th><th>คำตอบ</th></tr></thead><tbody>`;
+      q.rows.forEach((r,ri)=>{
+        html += `<tr id="row-${q.id}-${ri}"><td>${r.label}</td><td class="opts">`;
+        q.choices.forEach(c=>{
+          html += `<label><input type="radio" name="${q.id}-${ri}" value="${c}"> ${c}</label>`;
+        });
+        html += `</td></tr>`;
+      });
+      html += `</tbody></table>
+        <div class="check-row"><button class="check-btn" onclick="checkTable('${q.id}', ${q.rows.length})">ตรวจคำตอบ</button></div>
+        <div class="fb" id="fb-${q.id}"></div>`;
+    }
+
+    if (q.type === 'open') {
+      html += `<textarea id="ans-${q.id}" placeholder="พิมพ์คำตอบของนักเรียนที่นี่..."></textarea>
+        <div>
+          <span class="rubric-toggle" onclick="toggleRubric('${q.id}')">▸ ดูเกณฑ์การให้คะแนน (ส่งให้ AI เป็น grading rubric)</span>
+          <div class="rubric-box" id="rubric-${q.id}">
+            <div class="col"><b>คะแนนเต็ม ถ้าคำตอบ...</b>${q.rubricFull.map(r=>'• '+r).join('<br>')}</div>
+            <div class="col"><b>ไม่มีคะแนน ถ้าคำตอบ...</b>${q.rubricNone.map(r=>'• '+r).join('<br>')}</div>
+          </div>
+        </div>
+        <button class="ai-btn" id="ai-btn-${q.id}" onclick="gradeWithAI('${q.id}')">✨ ส่งให้ AI ตรวจ (ตัวอย่างการเรียก Claude API)</button>
+        <div class="ai-result" id="ai-result-${q.id}"></div>
+        <div class="ai-note">// TODO(ระบบเต็ม): แทนที่ gradeWithAI() ด้วยการเรียก AI API ของระบบจริง — ส่ง {studentAnswer, rubricFull, rubricNone} ไปตรวจ แล้วรับ {score, feedback} กลับมา</div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  secEl.innerHTML = html;
+  root.appendChild(secEl);
+});
+
+document.getElementById('progressLabel').textContent = `ตอบแล้ว 0/${totalClosed}`;
+
+function updateProgress(){
+  document.getElementById('progressLabel').textContent = `ตอบแล้ว ${answeredClosed.size}/${totalClosed}`;
+  document.getElementById('progressFill').style.width = (answeredClosed.size/totalClosed*100)+'%';
+}
+
+/* ---------- MCQ grading ---------- */
+function checkMCQ(id){
+  const q = findQuestion(id);
+  const chosen = document.querySelector(`input[name="${id}"]:checked`);
+  const fb = document.getElementById(`fb-${id}`);
+  const labels = document.querySelectorAll(`#q-${id} .options label`);
+  labels.forEach((l,i)=>{
+    l.classList.remove('correct-ans','wrong-ans');
+    if(i===q.correct) l.classList.add('correct-ans');
+  });
+  if(!chosen){ fb.textContent='กรุณาเลือกคำตอบก่อน'; fb.className='fb wrong'; return; }
+  answeredClosed.add(id); updateProgress();
+  const val = parseInt(chosen.value,10);
+  if(val===q.correct){ fb.textContent='✓ ถูกต้อง (+1 คะแนน)'; fb.className='fb correct'; }
+  else{
+    labels[val].classList.add('wrong-ans');
+    fb.textContent='✗ ยังไม่ถูก คำตอบที่ถูกถูกไฮไลต์ไว้แล้ว'; fb.className='fb wrong';
+  }
+}
+
+/* ---------- Table (grid Y/N, all-or-nothing per PISA rubric) ---------- */
+function checkTable(id, nRows){
+  const q = findQuestion(id);
+  const fb = document.getElementById(`fb-${id}`);
+  let allAnswered = true, allCorrect = true;
+  for(let i=0;i<nRows;i++){
+    const chosen = document.querySelector(`input[name="${id}-${i}"]:checked`);
+    const row = document.getElementById(`row-${id}-${i}`);
+    row.classList.remove('row-correct','row-wrong');
+    if(!chosen){ allAnswered=false; continue; }
+    if(chosen.value === q.rows[i].correct) row.classList.add('row-correct');
+    else { row.classList.add('row-wrong'); allCorrect=false; }
+  }
+  if(!allAnswered){ fb.textContent='กรุณาตอบให้ครบทุกข้อ'; fb.className='fb wrong'; return; }
+  answeredClosed.add(id); updateProgress();
+  if(allCorrect){ fb.textContent='✓ ถูกต้องทั้งหมด (+1 คะแนน — เกณฑ์ PISA ให้คะแนนเมื่อถูกครบทุกข้อ)'; fb.className='fb correct'; }
+  else{ fb.textContent='✗ ยังไม่ถูกครบทุกข้อ (แถวที่ผิดไฮไลต์สีแดง)'; fb.className='fb wrong'; }
+}
+
+function findQuestion(id){
+  for(const s of sections) for(const q of s.questions) if(q.id===id) return q;
+}
+
+/* ---------- Rubric toggle ---------- */
+function toggleRubric(id){
+  document.getElementById(`rubric-${id}`).classList.toggle('show');
+}
+
+/* ============================================================
+   AI grading hook
+   In this standalone demo file, this calls the Anthropic API
+   directly (as supported inside Claude.ai artifacts) so you can
+   see the exact request/response shape. In your production
+   system, replace the fetch() below with a call to your own
+   backend endpoint that wraps the AI API — same input/output
+   contract: send {studentAnswer, rubricFull, rubricNone},
+   receive back {score: "full"|"none", feedback: "..."}.
+   ============================================================ */
+async function gradeWithAI(id){
+  const q = findQuestion(id);
+  const answer = document.getElementById(`ans-${id}`).value.trim();
+  const btn = document.getElementById(`ai-btn-${id}`);
+  const resultEl = document.getElementById(`ai-result-${id}`);
+
+  if(!answer){
+    resultEl.textContent = 'กรุณาพิมพ์คำตอบก่อนส่งให้ AI ตรวจ';
+    resultEl.className = 'ai-result show none';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังให้ AI ตรวจ...';
+  resultEl.className = 'ai-result';
+
+  const prompt = `คุณเป็นผู้ตรวจข้อสอบวิทยาศาสตร์แบบ PISA จงให้คะแนนคำตอบของนักเรียนตามเกณฑ์ต่อไปนี้ แล้วตอบกลับเป็น JSON เท่านั้น ในรูปแบบ {"score":"full"|"none","feedback":"คำอธิบายสั้นๆ เป็นภาษาไทย"}
+
+เกณฑ์คะแนนเต็ม (ตัวอย่างคำตอบที่ยอมรับ):
+${q.rubricFull.map(r=>'- '+r).join('\\n')}
+
+เกณฑ์ไม่มีคะแนน (ตัวอย่างคำตอบที่ไม่ยอมรับ):
+${q.rubricNone.map(r=>'- '+r).join('\\n')}
+
+คำตอบของนักเรียน:
+"""${answer}"""
+
+ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอกเหนือจาก JSON`;
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = (data.content || []).map(b=>b.text||'').join('\n');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+
+    resultEl.classList.add('show', parsed.score === 'full' ? 'full' : 'none');
+    resultEl.innerHTML = `<b>${parsed.score==='full' ? '✓ คะแนนเต็ม' : '✗ ไม่มีคะแนน'} (${q.points} คะแนน)</b><br>${parsed.feedback||''}`;
+    resultEl.dataset.score = parsed.score === 'full' ? q.points : 0;
+    answeredClosed.add(id); // count toward "answered" for progress display
+
+  }catch(err){
+    resultEl.classList.add('show','none');
+    resultEl.innerHTML = `⚠️ เรียก AI ไม่สำเร็จในเดโมนี้ (${err.message}). ในระบบเต็มของคุณ ให้เปลี่ยนมาเรียก backend/AI API ของคุณเองแทน โดยส่ง payload เดียวกัน (คำตอบนักเรียน + เกณฑ์ด้านบน)`;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '✨ ส่งให้ AI ตรวจอีกครั้ง';
+  }
+}
+
+/* ---------- Final submit: sums only auto-graded (closed) items ---------- */
+document.getElementById('submitAllBtn').addEventListener('click', ()=>{
+  let score = 0, max = 0;
+  sections.forEach(s=>s.questions.forEach(q=>{
+    max += q.points;
+    if(q.type==='mcq'){
+      const chosen = document.querySelector(`input[name="${q.id}"]:checked`);
+      if(chosen && parseInt(chosen.value,10)===q.correct) score += q.points;
+    } else if(q.type==='table'){
+      let ok = true;
+      q.rows.forEach((r,i)=>{
+        const chosen = document.querySelector(`input[name="${q.id}-${i}"]:checked`);
+        if(!chosen || chosen.value !== r.correct) ok = false;
+      });
+      if(ok) score += q.points;
+    } else if(q.type==='open'){
+      const resultEl = document.getElementById(`ai-result-${q.id}`);
+      if(resultEl && resultEl.dataset.score !== undefined) score += parseInt(resultEl.dataset.score,10);
+    }
+  }));
+  const summary = document.getElementById('scoreSummary');
+  summary.classList.add('show');
+  document.getElementById('scoreBig').textContent = `${score} / ${max}`;
+  summary.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+</script>
+</body>
+</html>

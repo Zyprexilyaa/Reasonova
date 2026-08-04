@@ -35,9 +35,9 @@ const SUBJECTS: SubjectCard[] = [
   {
     key: 'science',
     title: 'Science',
-    description: 'Hands-on science reasoning activities and evidence-based prompts coming soon.',
-    badge: 'Coming soon',
-    ready: false,
+    description: 'PISA-style science reasoning activities with a ready-to-use mock lesson and evidence-based prompts.',
+    badge: 'Ready',
+    ready: true,
     path: '/pisa/science',
   },
   {

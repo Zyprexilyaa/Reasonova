@@ -24,6 +24,7 @@ import { ClassroomAssignPage } from './pages/ClassroomAssignPage';
 import { PisaAssessmentPage } from './pages/PisaAssessmentPage';
 import { PisaMathematicsPage } from './pages/PisaMathematicsPage';
 import { PisaReadingPage } from './pages/PisaReadingPage';
+import { PisaSciencePage } from './pages/PisaSciencePage';
 import { PisaPlaceholderPage } from './pages/PisaPlaceholderPage';
 
 function App() {
@@ -123,6 +124,11 @@ function App() {
             <Route path="/pisa/reading/question/:questionId" element={
               <ProtectedRoute>
                 <PisaReadingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/pisa/science" element={
+              <ProtectedRoute>
+                <PisaSciencePage />
               </ProtectedRoute>
             } />
             <Route path="/pisa/:subject" element={
