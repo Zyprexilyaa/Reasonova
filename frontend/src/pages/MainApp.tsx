@@ -117,6 +117,12 @@ export const MainApp: React.FC = () => {
                 >
                   {language === 'th' ? 'PISA' : 'PISA'}
                 </button>
+                <button
+                  className="nav-link"
+                  onClick={() => navigate('/info')}
+                >
+                  {language === 'th' ? 'ข้อมูล' : 'Info'}
+                </button>
               </>
             ) : (
               <>
@@ -140,6 +146,12 @@ export const MainApp: React.FC = () => {
                     {language === 'th' ? 'เข้าร่วมห้องเรียน' : 'Join Classroom'}
                   </button>
                 )}
+                <button
+                  className="nav-link"
+                  onClick={() => navigate('/info')}
+                >
+                  {language === 'th' ? 'ข้อมูล' : 'Info'}
+                </button>
               </>
             )}
             <button

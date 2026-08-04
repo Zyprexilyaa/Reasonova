@@ -26,6 +26,7 @@ import { PisaMathematicsPage } from './pages/PisaMathematicsPage';
 import { PisaReadingPage } from './pages/PisaReadingPage';
 import { PisaSciencePage } from './pages/PisaSciencePage';
 import { PisaPlaceholderPage } from './pages/PisaPlaceholderPage';
+import { InfoPage } from './pages/InfoPage';
 
 function App() {
   return (
@@ -139,6 +140,12 @@ function App() {
             <Route path="/pisa/:subject" element={
               <ProtectedRoute>
                 <PisaPlaceholderPage />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/info" element={
+              <ProtectedRoute>
+                <InfoPage />
               </ProtectedRoute>
             } />
 
