@@ -31,7 +31,7 @@ export const scienceUnits: ScienceUnit[] = [
     images: [
       {
         id: 'greenhouse-figure',
-        src: '/science-images/greenhouse-ecosystem.svg',
+        src: '/sci_example/green house/1.png',
         alt: 'ภาพแสดงแสงอาทิตย์ส่องเข้ากล่องกระจก และความร้อนถูกกักไว้ด้านใน',
         caption: 'ภาพที่ 1: กล่องกระจกกักเก็บความร้อนภายใน',
       },
@@ -44,7 +44,7 @@ export const scienceUnits: ScienceUnit[] = [
         hint: 'คิดถึงเส้นทางของแสงอาทิตย์และความร้อนหลังจากที่เข้าไปแล้ว',
         image: {
           id: 'greenhouse-figure',
-          src: '/science-images/greenhouse-ecosystem.svg',
+          src: '/sci_example/green house/2.png',
           alt: 'ภาพแสดงแสงอาทิตย์ส่องเข้ากล่องกระจก และความร้อนถูกกักไว้ด้านใน',
           caption: 'ใช้ภาพนี้เป็นหลักฐานในการอธิบาย',
         },
