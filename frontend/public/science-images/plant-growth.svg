@@ -1,0 +1,17 @@
+<svg width="720" height="420" viewBox="0 0 720 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="420" rx="24" fill="#F8FFF8"/>
+  <rect x="104" y="232" width="200" height="90" rx="20" fill="#C6E0C8"/>
+  <rect x="420" y="232" width="200" height="90" rx="20" fill="#C6E0C8"/>
+  <rect x="128" y="148" width="24" height="84" rx="12" fill="#4E7B3C"/>
+  <path d="M140 152C140 130 156 114 178 114H186C208 114 224 130 224 152V172H140V152Z" fill="#5D9B4A"/>
+  <path d="M140 188H224" stroke="#5D9B4A" stroke-width="8"/>
+  <rect x="445" y="168" width="24" height="64" rx="12" fill="#5B8C3D"/>
+  <path d="M457 170C457 148 473 132 495 132H503C525 132 541 148 541 170V188H457V170Z" fill="#6AA94F"/>
+  <path d="M457 208H541" stroke="#6AA94F" stroke-width="8"/>
+  <path d="M104 302H304" stroke="#7A8A5B" stroke-width="8"/>
+  <path d="M420 302H620" stroke="#7A8A5B" stroke-width="8"/>
+  <path d="M112 136C152 90 214 84 260 132" stroke="#F0C94B" stroke-width="10" stroke-linecap="round"/>
+  <path d="M428 144C468 102 530 90 574 140" stroke="#F0C94B" stroke-width="10" stroke-linecap="round"/>
+  <text x="122" y="102" font-family="Arial, sans-serif" font-size="24" fill="#2E533A">Less light</text>
+  <text x="438" y="102" font-family="Arial, sans-serif" font-size="24" fill="#2E533A">More light</text>
+</svg>

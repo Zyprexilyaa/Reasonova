@@ -1,0 +1,15 @@
+<svg width="720" height="420" viewBox="0 0 720 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="420" rx="24" fill="#F6FCFF"/>
+  <rect x="110" y="220" width="220" height="96" rx="24" fill="#8CC7E7"/>
+  <path d="M160 220C160 188 185 163 217 163H240C272 163 297 188 297 220" stroke="#3E7B88" stroke-width="12" stroke-linecap="round"/>
+  <path d="M141 217C141 193 159 174 183 174H203C227 174 245 193 245 217" stroke="#4FA9C5" stroke-width="12" stroke-linecap="round"/>
+  <path d="M390 152C432 110 500 102 560 128" stroke="#5D8FC3" stroke-width="12" stroke-linecap="round"/>
+  <path d="M365 212C420 168 480 166 550 194" stroke="#A1C9E8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M411 128C444 118 477 118 510 128" stroke="#A0D1F2" stroke-width="8" stroke-linecap="round"/>
+  <path d="M420 246C467 220 519 220 569 246" stroke="#E4C34E" stroke-width="10" stroke-linecap="round"/>
+  <path d="M418 280C451 310 493 320 554 299" stroke="#E4C34E" stroke-width="10" stroke-linecap="round"/>
+  <path d="M186 286C186 286 270 306 322 280" stroke="#7D8C97" stroke-width="8" stroke-linecap="round"/>
+  <text x="118" y="102" font-family="Arial, sans-serif" font-size="24" fill="#285A6A">Sun warms the pond</text>
+  <text x="388" y="132" font-family="Arial, sans-serif" font-size="24" fill="#3E5D75">Water rises as vapor</text>
+  <text x="408" y="322" font-family="Arial, sans-serif" font-size="22" fill="#8A6A19">Cooling leads to rain</text>
+</svg>

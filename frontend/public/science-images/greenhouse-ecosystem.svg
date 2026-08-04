@@ -1,0 +1,19 @@
+<svg width="720" height="420" viewBox="0 0 720 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="420" rx="24" fill="#F8FCFF"/>
+  <rect x="86" y="92" width="284" height="210" rx="18" fill="#FFF7D6" stroke="#D8A24A" stroke-width="6"/>
+  <path d="M126 280V170C126 145.7 145.7 126 170 126H240C264.3 126 284 145.7 284 170V280" stroke="#6E8F4E" stroke-width="10" stroke-linecap="round"/>
+  <path d="M155 152C155 128.8 172.8 111 196 111H214C237.2 111 255 128.8 255 152V180H155V152Z" fill="#5E9B4B"/>
+  <path d="M154 278H256" stroke="#6E8F4E" stroke-width="8"/>
+  <path d="M410 112C431.1 112 448 128.9 448 150V180H372V150C372 128.9 388.9 112 410 112Z" fill="#2D7B63"/>
+  <path d="M372 298H448" stroke="#4A6E4A" stroke-width="8"/>
+  <path d="M410 180V298" stroke="#4A6E4A" stroke-width="8"/>
+  <path d="M455 130C505 112 547 104 607 98" stroke="#6CB1E8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M456 154L610 140" stroke="#F7B455" stroke-width="12" stroke-linecap="round"/>
+  <path d="M465 182L611 185" stroke="#E6B84C" stroke-width="10" stroke-linecap="round"/>
+  <path d="M460 226C491 247 496 264 517 300" stroke="#DB5D2C" stroke-width="8" stroke-linecap="round"/>
+  <path d="M522 176C558 206 585 255 618 301" stroke="#DB5D2C" stroke-width="8" stroke-linecap="round"/>
+  <rect x="86" y="74" width="120" height="28" rx="14" fill="#D95F5F"/>
+  <text x="118" y="94" font-family="Arial, sans-serif" font-size="18" fill="white">Warm box</text>
+  <text x="430" y="90" font-family="Arial, sans-serif" font-size="24" fill="#2E4A5B">Sunlight enters</text>
+  <text x="430" y="120" font-family="Arial, sans-serif" font-size="20" fill="#5C7284">Heat is trapped</text>
+</svg>
