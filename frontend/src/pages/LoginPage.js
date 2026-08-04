@@ -1,17 +1,19 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import './Auth.css';
 export const LoginPage = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
+    const location = useLocation();
     const { loginWithEmail, loginWithGoogle, loading } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const redirectPath = location.state?.from?.pathname ?? '/home';
     const handleEmailLogin = async (e) => {
         e.preventDefault();
         setError(null);
@@ -21,7 +23,7 @@ export const LoginPage = () => {
                 throw new Error('Please fill in all fields');
             }
             await loginWithEmail(email, password);
-            navigate('/');
+            navigate(redirectPath, { replace: true });
         }
         catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Login failed';
@@ -36,7 +38,7 @@ export const LoginPage = () => {
         setIsSubmitting(true);
         try {
             await loginWithGoogle();
-            navigate('/');
+            navigate(redirectPath, { replace: true });
         }
         catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Google login failed';

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เสียงเป็นตัวอักษร — แปลงเสียงพูดไทยเป็นข้อความ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B1F3B;
+    --ink-soft:#2E345C;
+    --gold:#D4A94F;
+    --gold-dim:#8a713a;
+    --paper:#F7F5F0;
+    --paper-dim:#EAE6DC;
+    --teal:#5CA9A3;
+    --red:#C0524A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(212,169,79,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 110%, rgba(92,169,163,0.10), transparent 60%);
+    color:var(--paper);
+    font-family:'Noto Sans Thai','Noto Sans',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:48px 20px 80px;
+  }
+
+  .eyebrow{
+    font-size:12.5px;
+    letter-spacing:.14em;
+    color:var(--gold);
+    font-weight:600;
+    text-transform:uppercase;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:26px;height:1px;
+    background:var(--gold-dim);
+  }
+
+  h1{
+    font-size:clamp(30px,5vw,46px);
+    font-weight:700;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+    line-height:1.15;
+  }
+  h1 span{color:var(--gold);}
+
+  .sub{
+    color:#c7c9dc;
+    font-size:15.5px;
+    max-width:520px;
+    text-align:center;
+    line-height:1.7;
+    margin-bottom:40px;
+  }
+
+  .stage{
+    width:100%;
+    max-width:720px;
+    background:linear-gradient(180deg, var(--ink-soft), rgba(46,52,92,0.6));
+    border:1px solid rgba(212,169,79,0.18);
+    border-radius:20px;
+    padding:32px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 40px 80px -30px rgba(0,0,0,0.6);
+  }
+
+  .stage::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:linear-gradient(rgba(247,245,240,0.025) 1px, transparent 1px);
+    background-size:100% 28px;
+    pointer-events:none;
+  }
+
+  .control-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:24px;
+    position:relative;
+    z-index:1;
+    margin-bottom:28px;
+  }
+
+  .mic-btn{
+    --size:84px;
+    width:var(--size); height:var(--size);
+    border-radius:50%;
+    border:none;
+    background:radial-gradient(circle at 35% 30%, #e6c06f, var(--gold) 60%, var(--gold-dim));
+    color:var(--ink);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    flex-shrink:0;
+    transition:transform .15s ease, box-shadow .3s ease;
+    box-shadow:0 0 0 0 rgba(212,169,79,0.5);
+  }
+  .mic-btn:hover{transform:scale(1.04);}
+  .mic-btn:active{transform:scale(0.97);}
+  .mic-btn svg{width:32px;height:32px;}
+
+  .mic-btn.listening{
+    background:radial-gradient(circle at 35% 30%, #7fc4bf, var(--teal) 60%, #3f7a75);
+    animation:pulse 1.8s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(92,169,163,0.55);}
+    70%{box-shadow:0 0 0 22px rgba(92,169,163,0);}
+    100%{box-shadow:0 0 0 0 rgba(92,169,163,0);}
+  }
+
+  .waveform{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    height:56px;
+    flex:1;
+    min-width:0;
+  }
+  .waveform .bar{
+    width:4px;
+    border-radius:3px;
+    background:var(--gold-dim);
+    height:6px;
+    transition:height .09s ease, background .3s ease;
+  }
+  .waveform.active .bar{background:var(--teal);}
+
+  .status-line{
+    text-align:center;
+    font-size:13.5px;
+    color:#a9acc4;
+    margin-bottom:24px;
+    min-height:18px;
+    letter-spacing:.02em;
+  }
+  .status-line .dot{
+    display:inline-block;
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--teal);
+    margin-right:7px;
+    vertical-align:middle;
+    opacity:0;
+  }
+  .status-line.live .dot{opacity:1;animation:blink 1.4s ease-in-out infinite;}
+  @keyframes blink{0%,100%{opacity:.25;}50%{opacity:1;}}
+
+  .transcript-box{
+    position:relative;
+    z-index:1;
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:var(--radius);
+    padding:26px 26px 20px;
+    min-height:220px;
+    max-height:420px;
+    overflow-y:auto;
+    font-size:18px;
+    line-height:1.9;
+    box-shadow:inset 0 0 0 1px rgba(27,31,59,0.06);
+  }
+
+  .transcript-box .placeholder{
+    color:#9a9689;
+    font-style:normal;
+    font-size:15.5px;
+  }
+
+  .transcript-box .final{color:var(--ink);}
+  .transcript-box .interim{color:#9a9689;}
+
+  .toolbar{
+    position:relative;
+    z-index:1;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:16px;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .toolbar .left{
+    font-size:12.5px;
+    color:#8c8fa8;
+  }
+
+  .toolbar .actions{
+    display:flex;
+    gap:10px;
+  }
+
+  .btn-ghost{
+    background:transparent;
+    border:1px solid rgba(247,245,240,0.18);
+    color:var(--paper);
+    padding:9px 16px;
+    border-radius:9px;
+    font-family:inherit;
+    font-size:13.5px;
+    cursor:pointer;
+    transition:background .2s, border-color .2s;
+  }
+  .btn-ghost:hover{
+    background:rgba(247,245,240,0.06);
+    border-color:rgba(212,169,79,0.5);
+  }
+  .btn-ghost:disabled{opacity:.35;cursor:not-allowed;}
+
+  .lang-select{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    justify-content:center;
+    margin-top:26px;
+    font-size:13px;
+    color:#a9acc4;
+  }
+  select{
+    background:var(--ink);
+    color:var(--paper);
+    border:1px solid rgba(212,169,79,0.3);
+    border-radius:8px;
+    padding:7px 10px;
+    font-family:inherit;
+    font-size:13.5px;
+  }
+
+  .unsupported{
+    max-width:560px;
+    background:rgba(192,82,74,0.12);
+    border:1px solid rgba(192,82,74,0.4);
+    border-radius:12px;
+    padding:20px 22px;
+    font-size:14px;
+    line-height:1.8;
+    color:#f1cfcb;
+    text-align:center;
+    display:none;
+  }
+
+  footer{
+    margin-top:40px;
+    font-size:12px;
+    color:#6d7091;
+    text-align:center;
+    max-width:500px;
+    line-height:1.8;
+  }
+
+  @media (max-width:480px){
+    .stage{padding:22px;}
+    .mic-btn{--size:68px;}
+    .transcript-box{font-size:16.5px;padding:20px 18px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .mic-btn.listening{animation:none;}
+    .status-line.live .dot{animation:none;opacity:1;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="eyebrow">Speech → Text · ภาษาไทย</div>
+  <h1>พูดแล้ว<span>เห็นเป็นตัวอักษร</span></h1>
+  <p class="sub">กดปุ่มไมโครโฟนแล้วพูดได้เลย ระบบจะแปลงเสียงพูดภาษาไทยเป็นข้อความให้แบบเรียลไทม์</p>
+
+  <div class="stage" id="stage">
+    <div class="control-row">
+      <button class="mic-btn" id="micBtn" aria-label="เริ่มพูด">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="micIcon">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+      </button>
+      <div class="waveform" id="waveform"></div>
+    </div>
+
+    <div class="status-line" id="statusLine"><span class="dot"></span>กดไมโครโฟนเพื่อเริ่มพูด</div>
+
+    <div class="transcript-box" id="transcriptBox">
+      <span class="placeholder">ข้อความที่แปลงได้จะปรากฏตรงนี้…</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="left" id="wordCount"></div>
+      <div class="actions">
+        <button class="btn-ghost" id="copyBtn" disabled>คัดลอกข้อความ</button>
+        <button class="btn-ghost" id="clearBtn" disabled>ล้างข้อความ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lang-select">
+    ภาษาที่พูด:
+    <select id="langSelect">
+      <option value="th-TH" selected>ไทย (Thai)</option>
+      <option value="en-US">English (US)</option>
+      <option value="th-TH,en-US">ไทยปนอังกฤษ (ตรวจจับอัตโนมัติแบบพื้นฐาน)</option>
+    </select>
+  </div>
+
+  <div class="unsupported" id="unsupported">
+    เบราว์เซอร์นี้ไม่รองรับการแปลงเสียงเป็นข้อความ<br>
+    กรุณาเปิดผ่าน <strong>Google Chrome</strong> หรือ <strong>Microsoft Edge</strong> บนคอมพิวเตอร์หรือมือถือ Android
+  </div>
+
+  <footer>
+    การประมวลผลเสียงใช้ระบบจดจำเสียงของเบราว์เซอร์ (ต้องเชื่อมต่ออินเทอร์เน็ต) ข้อความจะถูกเก็บไว้ในเครื่องของคุณเท่านั้น ไม่มีการบันทึกเสียงหรือส่งไปที่อื่นนอกเหนือจากบริการจดจำเสียงของเบราว์เซอร์
+  </footer>
+
+<script>
+(function(){
+  const micBtn = document.getElementById('micBtn');
+  const waveform = document.getElementById('waveform');
+  const statusLine = document.getElementById('statusLine');
+  const transcriptBox = document.getElementById('transcriptBox');
+  const copyBtn = document.getElementById('copyBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const wordCount = document.getElementById('wordCount');
+  const langSelect = document.getElementById('langSelect');
+  const unsupported = document.getElementById('unsupported');
+  const stage = document.getElementById('stage');
+
+  // build waveform bars
+  const BAR_COUNT = 40;
+  const bars = [];
+  for(let i=0;i<BAR_COUNT;i++){
+    const b = document.createElement('div');
+    b.className = 'bar';
+    waveform.appendChild(b);
+    bars.push(b);
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if(!SpeechRecognition){
+    unsupported.style.display = 'block';
+    stage.style.display = 'none';
+    document.querySelector('.lang-select').style.display = 'none';
+    return;
+  }
+
+  let recognition = null;
+  let listening = false;
+  let finalText = '';
+  let audioCtx, analyser, source, dataArray, rafId, stream;
+
+  function buildRecognition(){
+    const rec = new SpeechRecognition();
+    rec.lang = langSelect.value.split(',')[0];
+    rec.continuous = true;
+    rec.interimResults = true;
+
+    rec.onresult = (e) => {
+      let interim = '';
+      for(let i = e.resultIndex; i < e.results.length; i++){
+        const transcript = e.results[i][0].transcript;
+        if(e.results[i].isFinal){
+          finalText += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      renderTranscript(interim);
+    };
+
+    rec.onerror = (e) => {
+      if(e.error === 'no-speech'){
+        setStatus('ไม่ได้ยินเสียงพูด ลองพูดอีกครั้ง', false);
+      } else if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+        setStatus('กรุณาอนุญาตการใช้งานไมโครโฟน', false);
+        stopListening();
+      } else {
+        setStatus('เกิดข้อผิดพลาด: ' + e.error, false);
+      }
+    };
+
+    rec.onend = () => {
+      if(listening){
+        // auto-restart for continuous listening (browsers stop after silence)
+        try{ rec.start(); }catch(err){}
+      }
+    };
+
+    return rec;
+  }
+
+  function renderTranscript(interim){
+    transcriptBox.innerHTML = '';
+    if(!finalText && !interim){
+      const ph = document.createElement('span');
+      ph.className = 'placeholder';
+      ph.textContent = 'ข้อความที่แปลงได้จะปรากฏตรงนี้…';
+      transcriptBox.appendChild(ph);
+    } else {
+      const finalSpan = document.createElement('span');
+      finalSpan.className = 'final';
+      finalSpan.textContent = finalText;
+      transcriptBox.appendChild(finalSpan);
+      if(interim){
+        const interimSpan = document.createElement('span');
+        interimSpan.className = 'interim';
+        interimSpan.textContent = interim;
+        transcriptBox.appendChild(interimSpan);
+      }
+    }
+    transcriptBox.scrollTop = transcriptBox.scrollHeight;
+    updateToolbar();
+  }
+
+  function updateToolbar(){
+    const hasText = finalText.trim().length > 0;
+    copyBtn.disabled = !hasText;
+    clearBtn.disabled = !hasText && transcriptBox.textContent.trim() === 'ข้อความที่แปลงได้จะปรากฏตรงนี้…';
+    clearBtn.disabled = transcriptBox.querySelector('.placeholder') !== null;
+    const count = finalText.trim().length ? finalText.trim().split(/\s+/).length : 0;
+    wordCount.textContent = hasText ? `${finalText.trim().length} ตัวอักษร` : '';
+  }
+
+  function setStatus(text, live){
+    statusLine.classList.toggle('live', !!live);
+    statusLine.innerHTML = '<span class="dot"></span>' + text;
+  }
+
+  async function startListening(){
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }catch(err){
+      setStatus('ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาตรวจสอบสิทธิ์การใช้งาน', false);
+      return;
+    }
+
+    setupAudioViz(stream);
+
+    recognition = buildRecognition();
+    try{
+      recognition.start();
+    }catch(err){
+      setStatus('ไม่สามารถเริ่มการฟังได้', false);
+      return;
+    }
+
+    listening = true;
+    micBtn.classList.add('listening');
+    waveform.classList.add('active');
+    micBtn.setAttribute('aria-label', 'หยุดพูด');
+    setStatus('กำลังฟัง — พูดได้เลย', true);
+  }
+
+  function stopListening(){
+    listening = false;
+    if(recognition){
+      recognition.onend = null;
+      recognition.stop();
+      recognition = null;
+    }
+    if(stream){
+      stream.getTracks().forEach(t => t.stop());
+    }
+    if(rafId) cancelAnimationFrame(rafId);
+    if(audioCtx) audioCtx.close().catch(()=>{});
+    bars.forEach(b => b.style.height = '6px');
+
+    micBtn.classList.remove('listening');
+    waveform.classList.remove('active');
+    micBtn.setAttribute('aria-label', 'เริ่มพูด');
+    setStatus('หยุดฟังแล้ว — กดไมโครโฟนเพื่อเริ่มใหม่', false);
+    renderTranscript('');
+  }
+
+  function setupAudioViz(mediaStream){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 128;
+    source = audioCtx.createMediaStreamSource(mediaStream);
+    source.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    function draw(){
+      analyser.getByteFrequencyData(dataArray);
+      const step = Math.floor(dataArray.length / BAR_COUNT);
+      for(let i=0;i<BAR_COUNT;i++){
+        const v = dataArray[i*step] || 0;
+        const h = Math.max(6, (v/255)*52);
+        bars[i].style.height = h + 'px';
+      }
+      rafId = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  micBtn.addEventListener('click', () => {
+    if(listening){
+      stopListening();
+    } else {
+      startListening();
+    }
+  });
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(finalText.trim()).then(() => {
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'คัดลอกแล้ว ✓';
+      setTimeout(() => copyBtn.textContent = original, 1500);
+    });
+  });
+
+  clearBtn.addEventListener('click', () => {
+    finalText = '';
+    renderTranscript('');
+  });
+
+  langSelect.addEventListener('change', () => {
+    if(listening){
+      stopListening();
+      setTimeout(startListening, 200);
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>

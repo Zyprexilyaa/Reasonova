@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Question, AnalysisResult } from '../types';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AnalysisDisplay } from '../components/AnalysisDisplay';
+import { SpeechToTextPanel } from '../components/SpeechToTextPanel';
 import { cleanupAudioUrl } from '../services/storage';
 import { analyzeStudentAnswer, transcribeAudio } from '../services/api';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -318,14 +319,23 @@ export const QuestionPage: React.FC<QuestionPageProps> = ({
 
                 {/* Text Input */}
                 {inputMethod === 'text' && (
-                  <textarea
-                    className="text-input"
-                    value={textAnswer}
-                    onChange={(e) => setTextAnswer(e.target.value)}
-                    placeholder={t('typeYourAnswer')}
-                    disabled={isSubmitting || isAnalyzing}
-                    rows={6}
-                  />
+                  <>
+                    <textarea
+                      className="text-input"
+                      value={textAnswer}
+                      onChange={(e) => setTextAnswer(e.target.value)}
+                      placeholder={t('typeYourAnswer')}
+                      disabled={isSubmitting || isAnalyzing}
+                      rows={6}
+                    />
+                    <SpeechToTextPanel
+                      value={textAnswer}
+                      onChange={setTextAnswer}
+                      placeholder={t('typeYourAnswer')}
+                      lang="th-TH,en-US"
+                      label="Speech to text"
+                    />
+                  </>
                 )}
               </>
             )}

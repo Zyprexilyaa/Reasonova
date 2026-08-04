@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { AnalysisDisplay } from '../components/AnalysisDisplay';
+import { SpeechToTextPanel } from '../components/SpeechToTextPanel';
 import { analyzeStudentAnswer } from '../services/api';
 import './PisaAssessmentPage.css';
 import readingContent from './pisaReadingContent.js';
@@ -197,6 +198,13 @@ export const PisaReadingPage: React.FC = () => {
               placeholder={language === 'th' ? 'พิมพ์คำตอบของคุณที่นี่...' : 'Type your answer here...'}
               style={{ width: '100%', borderRadius: 12, border: '1px solid #dfeaf5', padding: 12, fontSize: 15, resize: 'vertical', minHeight: 280, marginTop: 16 }}
             />
+            <SpeechToTextPanel
+              value={answers[question.id] || ''}
+              onChange={(value) => setAnswers((prev) => ({ ...prev, [question.id]: value }))}
+              placeholder={language === 'th' ? 'พิมพ์คำตอบของคุณที่นี่...' : 'Type your answer here...'}
+              lang="th-TH,en-US"
+              label={language === 'th' ? 'ป้อนคำตอบด้วยเสียง' : 'Voice answer'}
+            />
             <div className="pisa-actions" style={{ marginTop: 12 }}>
               <button className="pisa-btn primary" type="button" onClick={() => handleOpenSubmit(question)} disabled={isSubmitting[question.id]}>
                 {isSubmitting[question.id]
@@ -346,6 +354,13 @@ export const PisaReadingPage: React.FC = () => {
                         rows={12}
                         placeholder={language === 'th' ? 'พิมพ์คำตอบของคุณที่นี่...' : 'Type your answer here...'}
                         style={{ width: '100%', borderRadius: 12, border: '1px solid #dfeaf5', padding: 12, fontSize: 15, resize: 'vertical', minHeight: 280 }}
+                      />
+                      <SpeechToTextPanel
+                        value={answers[activeQuestion.id] || ''}
+                        onChange={(value) => setAnswers((prev) => ({ ...prev, [activeQuestion.id]: value }))}
+                        placeholder={language === 'th' ? 'พิมพ์คำตอบของคุณที่นี่...' : 'Type your answer here...'}
+                        lang="th-TH,en-US"
+                        label={language === 'th' ? 'ป้อนคำตอบด้วยเสียง' : 'Voice answer'}
                       />
 
                       <div className="pisa-actions" style={{ marginTop: 12 }}>

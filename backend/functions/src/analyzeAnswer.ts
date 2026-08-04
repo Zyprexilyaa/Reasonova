@@ -1,4 +1,6 @@
 import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 import {
   AnalyzeAnswerRequest,
   AnalyzeAnswerResponse,
@@ -24,6 +26,107 @@ if (!clientApiKey) {
  */
 async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+type OfficialScoringData = {
+  code: string;
+  question: string;
+  rubric: string;
+  passage: string;
+  unitId: string;
+};
+
+function normalizeQuestionKey(value: string): string {
+  return value.replace(/[^a-z0-9]/gi, '').toLowerCase();
+}
+
+function loadOfficialScoringData(questionId: string): OfficialScoringData | null {
+  try {
+    const repoRoot = path.resolve(process.cwd(), '..', '..');
+    const specPath = path.join(repoRoot, 'PISA_Reading_Mock_Example', 'How to scoring', 'grading_spec.json');
+    const passagesPath = path.join(repoRoot, 'PISA_Reading_Mock_Example', 'How to scoring', 'passages.json');
+
+    const gradingSpec = JSON.parse(fs.readFileSync(specPath, 'utf8')) as Array<{
+      code?: string;
+      question?: string;
+      rubric?: string;
+      unit_id?: string;
+      passage_unit?: string;
+    }>;
+    const passages = JSON.parse(fs.readFileSync(passagesPath, 'utf8')) as Array<{
+      unit_id?: string;
+      passage?: string;
+    }>;
+
+    const normalizedQuestionId = normalizeQuestionKey(questionId);
+    const match = gradingSpec.find((entry) => {
+      if (!entry.code) {
+        return false;
+      }
+      return normalizeQuestionKey(entry.code) === normalizedQuestionId;
+    });
+
+    if (!match || !match.rubric) {
+      return null;
+    }
+
+    const passageMatch = passages.find((entry) => entry.unit_id === match.passage_unit || entry.unit_id === match.unit_id);
+    return {
+      code: match.code || questionId,
+      question: match.question || `Question ID: ${questionId}`,
+      rubric: match.rubric,
+      passage: passageMatch?.passage || '',
+      unitId: match.unit_id || match.passage_unit || 'unknown',
+    };
+  } catch (error) {
+    console.warn('⚠️ Could not load official scoring criteria from the scoring folder:', error);
+    return null;
+  }
+}
+
+export function buildScoringPrompt(
+  req: Pick<AnalyzeAnswerRequest, 'transcription' | 'questionId' | 'referenceAnswer' | 'scoringGuideline'>,
+  officialScoringData?: OfficialScoringData | null
+): string {
+  const resolvedScoringData = officialScoringData ?? loadOfficialScoringData(req.questionId);
+  const passage = resolvedScoringData?.passage || 'No passage available.';
+  const question = resolvedScoringData?.question || `Question ID: ${req.questionId}`;
+  const rubric = resolvedScoringData?.rubric || req.scoringGuideline || 'Use the rubric provided by the teacher.';
+
+  return `คุณเป็นผู้ตรวจข้อสอบ PISA การอ่าน ประเภทข้อเขียนตอบอิสระ (constructed response)
+
+หน้าที่ของคุณ:
+1. อ่านบทอ่าน (passage) และคำถาม (question) เพื่อเข้าใจบริบท
+2. เทียบคำตอบของนักเรียน (student_answer) กับเกณฑ์การให้คะแนนอย่างเป็นทางการ (rubric)
+3. ให้คะแนนตามเกณฑ์เท่านั้น — ห้ามใช้ดุลยพินิจส่วนตัวนอกเหนือจากที่ rubric ระบุ
+4. ถ้าคำตอบเข้าข่ายหลายระดับ (เช่น ทั้ง "ได้คะแนนเต็ม" และ "ได้คะแนนบางส่วน") ให้เลือกระดับสูงสุดที่คำตอบเข้าเกณฑ์จริง
+5. ถ้าคำตอบสั้นเกินไป คลุมเครือ หรือไม่เกี่ยวข้อง ให้คะแนน 0 ตามหมวด "ไม่ได้คะแนน"
+
+ตอบกลับเป็น JSON เท่านั้น ตามรูปแบบนี้:
+{
+  "score": <number>,
+  "max_score": <number>,
+  "level": "เต็ม | บางส่วน | ไม่ได้คะแนน",
+  "matched_criterion": "<ยกข้อความสั้นๆ จาก rubric ที่ใช้ตัดสิน>",
+  "feedback_th": "<feedback สั้นๆ ให้นักเรียน เป็นภาษาไทย เชิงสร้างสรรค์>"
+}
+
+บทอ่าน:
+"""
+${passage}
+"""
+
+คำถาม: ${question}
+
+เกณฑ์การให้คะแนน:
+"""
+${rubric}
+"""
+
+คำตอบของนักเรียน:
+"""
+${req.transcription}
+"""`;
 }
 
 /**
@@ -114,41 +217,10 @@ export async function analyzeStudentAnswer(
       audioBase64,
     } = req;
 
+    const officialScoringData = loadOfficialScoringData(questionId);
+
     // Create the analysis prompt for Gemini
-    const analysisPrompt = `You are an expert educational assessor evaluating student answers to PISA-style questions.
-
-Student's Answer:
-"${transcription}"
-
-Reference Answer (what a good answer should include):
-"${referenceAnswer}"
-
-Scoring Guidelines:
-${scoringGuideline}
-
-PISA Thinking Levels:
-- Level 1 (Basic Understanding): Student shows basic understanding of facts and information
-- Level 2 (Simple Reasoning): Student makes simple connections and basic explanations
-- Level 3 (Analytical Thinking): Student analyzes complex situations and makes reasonable inferences
-- Level 4 (Complex Reasoning): Student evaluates evidence and builds sophisticated arguments
-
-Please analyze the student's answer and provide:
-1. A thinking level (1-4)
-2. A score out of 100
-3. Detailed feedback on the answer
-4. A suggested improved answer that shows better reasoning
-5. A list of strengths in the answer
-6. A list of areas for improvement
-
-Respond in valid JSON format (no markdown, just pure JSON):
-{
-  "thinkingLevel": <number 1-4>,
-  "score": <number 0-100>,
-  "feedback": "<detailed feedback>",
-  "suggestedAnswer": "<improved answer>",
-  "strengths": ["<strength1>", "<strength2>"],
-  "improvements": ["<improvement1>", "<improvement2>"]
-}`;
+    const analysisPrompt = buildScoringPrompt(req, officialScoringData);
 
     // Check if Gemini API is available
     if (!clientApiKey) {
