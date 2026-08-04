@@ -289,6 +289,75 @@ async function callGeminiViaREST(prompt: string, retryCount: number = 0): Promis
   }
 }
 
+function clampScore(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function scoreFromThinkingLevel(level: number): number {
+  switch (level) {
+    case 4:
+      return 90;
+    case 3:
+      return 75;
+    case 2:
+      return 55;
+    case 1:
+    default:
+      return 20;
+  }
+}
+
+function thinkingLevelFromScore(score: number): 1 | 2 | 3 | 4 {
+  if (score >= 80) return 4;
+  if (score >= 60) return 3;
+  if (score >= 40) return 2;
+  return 1;
+}
+
+function normalizeRubricScore(score: number, maxScore?: number): number {
+  if (typeof maxScore === 'number' && maxScore > 0) {
+    const normalized = (score / maxScore) * 100;
+    return clampScore(normalized);
+  }
+
+  if (score >= 0 && score <= 4) {
+    return clampScore((score / 4) * 100);
+  }
+
+  return clampScore(score);
+}
+
+function normalizeScore(score: number | undefined, thinkingLevel: number | undefined): number {
+  const normalizedLevel = normalizeThinkingLevel(score, thinkingLevel);
+
+  if (typeof score === 'number' && !Number.isNaN(score)) {
+    const clamped = clampScore(score);
+    if (thinkingLevel && normalizedLevel !== thinkingLevel) {
+      console.warn('⚠️ Gemini score/level mismatch detected, aligning score to level', {
+        score: clamped,
+        thinkingLevel,
+        alignedScore: scoreFromThinkingLevel(thinkingLevel),
+      });
+      return scoreFromThinkingLevel(thinkingLevel);
+    }
+    return clamped;
+  }
+
+  return scoreFromThinkingLevel(normalizedLevel);
+}
+
+function normalizeThinkingLevel(score: number | undefined, thinkingLevel: number | undefined): 1 | 2 | 3 | 4 {
+  if (thinkingLevel && [1, 2, 3, 4].includes(thinkingLevel)) {
+    return thinkingLevel as 1 | 2 | 3 | 4;
+  }
+
+  if (typeof score === 'number' && !Number.isNaN(score)) {
+    return thinkingLevelFromScore(clampScore(score));
+  }
+
+  return 1;
+}
+
 /**
  * Analyze student answer using Google Gemini AI
  * Evaluates thinking level, provides feedback, and suggests improvements
@@ -347,7 +416,9 @@ export async function analyzeStudentAnswer(
       if (isRubricBased) {
         console.log('📊 Received rubric-based scoring format');
         const rubricResult = analysisResult as RubricBasedGeminiResult;
-        
+        const normalizedScore = normalizeRubricScore(rubricResult.score, rubricResult.max_score);
+        const normalizedThinkingLevel = normalizeThinkingLevel(normalizedScore, undefined);
+
         // Map rubric-based format to legacy format for compatibility
         const mappedResponse: AnalyzeAnswerResponse = {
           id: `analysis-${Date.now()}`,
@@ -355,8 +426,8 @@ export async function analyzeStudentAnswer(
           studentId: req.studentId,
           questionId: req.questionId,
           transcription: req.transcription,
-          thinkingLevel: rubricResult.score >= (rubricResult.max_score || 100) * 0.8 ? 4 : rubricResult.score >= (rubricResult.max_score || 100) * 0.5 ? 2 : 1,
-          score: rubricResult.score,
+          thinkingLevel: normalizedThinkingLevel,
+          score: normalizedScore,
           feedback: rubricResult.feedback_th || rubricResult.feedback_en || rubricResult.matched_criterion,
           suggestedAnswer: req.referenceAnswer,
           strengths: rubricResult.matched_criterion ? [rubricResult.matched_criterion] : [],
@@ -401,7 +472,16 @@ export async function analyzeStudentAnswer(
         throw new Error('Invalid analysis result from Gemini');
       }
 
-      console.log('✅ Gemini analysis successful - Level:', legacyResult.thinkingLevel, 'Score:', legacyResult.score);
+      const normalizedThinkingLevel = normalizeThinkingLevel(
+        legacyResult.score,
+        legacyResult.thinkingLevel
+      );
+      const normalizedScore = normalizeScore(
+        legacyResult.score,
+        normalizedThinkingLevel
+      );
+
+      console.log('✅ Gemini analysis successful - Normalized Level:', normalizedThinkingLevel, 'Score:', normalizedScore);
 
       // Build response immediately (don't wait for Firestore saves)
       const responseData = {
@@ -410,8 +490,8 @@ export async function analyzeStudentAnswer(
         studentId: req.studentId,
         questionId: req.questionId,
         transcription: req.transcription,
-        thinkingLevel: legacyResult.thinkingLevel,
-        score: legacyResult.score,
+        thinkingLevel: normalizedThinkingLevel,
+        score: normalizedScore,
         feedback: legacyResult.feedback,
         suggestedAnswer: legacyResult.suggestedAnswer,
         strengths: legacyResult.strengths || [],
